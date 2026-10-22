@@ -200,3 +200,15 @@ export function formatDateTime(date) {
   }).format(new Date(date))
 }
 
+
+/**
+ * Normalisasi nama wilayah (Provinsi/Kabupaten/Kota) untuk pencocokan toleran variasi ejaan
+ */
+export function normalizeRegionName(name) {
+  return String(name || '').trim().toLowerCase()
+    .replace(/^provinsi\s+/i, '')
+    .replace(/^kab\.\s+/i, '')
+    .replace(/^kabupaten\s+/i, '')
+    .replace(/^kota\s+/i, '')
+    .replace(/[^a-z0-9]/g, '')
+}

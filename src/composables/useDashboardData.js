@@ -5,7 +5,8 @@ import { MOCK_SHEET_1_BM_BIROKRASI, MOCK_SHEET_2_MARKAS } from '../data/mockData
 import {
   getKedekatanMeta,
   getStatusMarkasMeta,
-  normalizeRow
+  normalizeRow,
+  normalizeRegionName
 } from '../utils/dataHelpers.js'
 
 // Reactive state singleton
@@ -52,7 +53,10 @@ export function useDashboardData() {
    */
   function parseSheetDataFromArrays(sheet1RawRows, sheet2RawRows) {
     // 1. Ekstraksi Sheet 2 (Markas)
-    const markasMap = new Map()
+    const markasMap = new Map() // key: kodeKab
+    const markasProvMap = new Map() // key: `${kodeBo}_${norm}` & `${kodeBo}_PROV`
+    const markasNameMap = new Map() // key: normName
+    const allSheet2Entries = []
     let s2HeaderFound = false
 
     for (const row of sheet2RawRows) {
@@ -73,16 +77,27 @@ export function useDashboardData() {
       const kabupaten = String(row[3] || '').trim()
       const statusMarkas = String(row[4] || '').trim()
 
-      if (!kodeBo && !kodeKab) continue
+      if (!kodeBo && !kodeKab && !kabupaten) continue
+
+      const entry = {
+        kodeBo,
+        namaBo,
+        kodeKab,
+        kabupaten,
+        statusMarkas: statusMarkas || ''
+      }
+      allSheet2Entries.push(entry)
 
       if (kodeKab) {
-        markasMap.set(kodeKab, {
-          kodeBo,
-          namaBo,
-          kodeKab,
-          kabupaten,
-          statusMarkas: statusMarkas || ''
-        })
+        markasMap.set(kodeKab, entry)
+      }
+      if (kabupaten) {
+        const norm = normalizeRegionName(kabupaten)
+        markasNameMap.set(norm, entry)
+        if (!kodeKab || kabupaten.toLowerCase().startsWith('provinsi')) {
+          markasProvMap.set(`${kodeBo}_${norm}`, entry)
+          markasProvMap.set(`${kodeBo}_PROV`, entry)
+        }
       }
     }
 
@@ -90,6 +105,7 @@ export function useDashboardData() {
     const boMap = new Map()
     let s1HeaderFound = false
     const processedKabIds = new Set()
+    const processedMarkasEntries = new Set()
 
     // 3. Ekstraksi Sheet 1 (BM & Birokrasi)
     for (const row of sheet1RawRows) {
@@ -129,8 +145,25 @@ export function useDashboardData() {
 
       if (rawKabId) processedKabIds.add(rawKabId)
 
-      // Cari padanan markas dari Sheet 2 (tetap kosong jika tidak ada di Sheet 2)
-      const markasInfo = markasMap.get(kabId) || null
+      // Cari padanan markas dari Sheet 2 (termasuk baris provinsi yang kode kab-nya kosong)
+      let markasInfo = null
+      if (rawKabId && markasMap.has(rawKabId)) {
+        markasInfo = markasMap.get(rawKabId)
+      } else if (isProvinsi) {
+        const norm = normalizeRegionName(kabupaten || provinsi)
+        markasInfo = markasProvMap.get(`${kodeBo}_${norm}`) ||
+                     markasProvMap.get(`${kodeBo}_PROV`) ||
+                     markasNameMap.get(norm) ||
+                     null
+      } else if (kabupaten) {
+        const norm = normalizeRegionName(kabupaten)
+        markasInfo = markasNameMap.get(norm) || null
+      }
+
+      if (markasInfo) {
+        processedMarkasEntries.add(markasInfo)
+      }
+
       const rawStatusMarkas = markasInfo ? markasInfo.statusMarkas : ''
 
       const dinasMeta = getKedekatanMeta(statusDinas)
@@ -184,9 +217,9 @@ export function useDashboardData() {
       boEntry.kabupatenList.push(kabupatenItem)
     }
 
-    // 4. Tambahkan kabupaten dari Sheet 2 jika ada yang belum tercover di Sheet 1 (Outer Join)
-    for (const [kodeKab, markasItem] of markasMap.entries()) {
-      if (!processedKabIds.has(kodeKab)) {
+    // 4. Tambahkan kabupaten/provinsi dari Sheet 2 jika ada yang belum tercover di Sheet 1 (Outer Join)
+    for (const markasItem of allSheet2Entries) {
+      if (!processedMarkasEntries.has(markasItem) && (!markasItem.kodeKab || !processedKabIds.has(markasItem.kodeKab))) {
         const kodeBo = (markasItem.kodeBo || 'BO-UNKNOWN').trim().toUpperCase()
         const namaBo = markasItem.namaBo || kodeBo
 
@@ -271,18 +304,37 @@ export function useDashboardData() {
 
     // Format objek standar
     const markasMap = new Map()
+    const markasProvMap = new Map()
+    const markasNameMap = new Map()
+
     for (const raw of sheet2Rows) {
       const row = normalizeRow(raw)
-      const kodeKab = row.kodekabupaten || row.kabid || row.id || ''
-      if (!kodeKab) continue
+      const kodeKab = String(row.kodekabupaten || row.kabid || row.id || '').trim()
+      const kodeBo = String(row.kodebo || '').trim().toUpperCase()
+      const kabupaten = String(row.kabupaten || '').trim()
+      const statusMarkas = String(row.statusmarkas || '').trim()
 
-      markasMap.set(String(kodeKab).trim(), {
-        kodeBo: row.kodebo || '',
+      if (!kodeBo && !kodeKab && !kabupaten) continue
+
+      const entry = {
+        kodeBo,
         namaBo: row.namabo || '',
-        kodeKabupaten: String(kodeKab).trim(),
-        kabupaten: row.kabupaten || '',
-        statusMarkas: row.statusmarkas || ''
-      })
+        kodeKabupaten: kodeKab,
+        kabupaten,
+        statusMarkas
+      }
+
+      if (kodeKab) {
+        markasMap.set(kodeKab, entry)
+      }
+      if (kabupaten) {
+        const norm = normalizeRegionName(kabupaten)
+        markasNameMap.set(norm, entry)
+        if (!kodeKab || kabupaten.toLowerCase().startsWith('provinsi')) {
+          markasProvMap.set(`${kodeBo}_${norm}`, entry)
+          markasProvMap.set(`${kodeBo}_PROV`, entry)
+        }
+      }
     }
 
     const boMap = new Map()
@@ -297,10 +349,24 @@ export function useDashboardData() {
       const kabId = String(row.kabid || row.kodekabupaten || '').trim()
       const kabupaten = row.kabupaten || 'Kabupaten ' + kabId
       const namaBm = row.namabm || ''
+      const isProvinsi = !kabId || kabupaten.toLowerCase().startsWith('provinsi')
 
       if (kabId) processedKabIds.add(kabId)
 
-      const markasInfo = markasMap.get(kabId) || null
+      let markasInfo = null
+      if (kabId && markasMap.has(kabId)) {
+        markasInfo = markasMap.get(kabId)
+      } else if (isProvinsi) {
+        const norm = normalizeRegionName(kabupaten || provinsi)
+        markasInfo = markasProvMap.get(`${kodeBo}_${norm}`) ||
+                     markasProvMap.get(`${kodeBo}_PROV`) ||
+                     markasNameMap.get(norm) ||
+                     null
+      } else if (kabupaten) {
+        const norm = normalizeRegionName(kabupaten)
+        markasInfo = markasNameMap.get(norm) || null
+      }
+
       const rawStatusMarkas = markasInfo ? markasInfo.statusMarkas : ''
 
       const statusDinas = row.status || row.statusdinas || ''
