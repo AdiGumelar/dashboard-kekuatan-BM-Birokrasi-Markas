@@ -50,7 +50,7 @@ onMounted(() => {
     <!-- Modal Detail Kabupaten -->
     <KabupatenDetailModal />
 
-    <!-- Modal Rincian Status Penayangan -->
+    <!-- Modal Status Penayangan -->
     <StatusPenayanganModal />
 
     <!-- Footer -->

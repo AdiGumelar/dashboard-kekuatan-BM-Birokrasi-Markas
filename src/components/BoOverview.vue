@@ -84,14 +84,14 @@ const { isAdmin, isAm, currentAmCode } = useAuth();
       </StatCard>
 
       <StatCard
-        @click="openStatusPenayanganModal"
         title="Status Penayangan"
         :value="globalStats.totalPenayanganTayang"
         :subtitle="`${globalStats.totalPenayanganProses} Proses · ${globalStats.totalPenayanganBelum} Belum`"
         :badge-text="`${globalStats.persenPenayanganTayang}% Tayang`"
         badge-class="bg-emerald-50 text-emerald-700"
         icon-bg-class="bg-emerald-50 text-emerald-600"
-        class="cursor-pointer hover:border-emerald-300 hover:ring-2 hover:ring-emerald-200/60 hover:-translate-y-0.5 active:scale-[0.99] transition-all select-none"
+class="cursor-pointer hover:border-emerald-300 hover:ring-2 hover:ring-emerald-200/60 hover:-translate-y-0.5 active:scale-[0.99] transition-all select-none"
+        @click="openStatusPenayanganModal"
       >
         <template #icon>
           <Tv class="w-6 h-6" />

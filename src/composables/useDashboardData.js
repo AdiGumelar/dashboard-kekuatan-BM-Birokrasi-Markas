@@ -1087,6 +1087,8 @@ export function useDashboardData() {
     clearSelectedBo,
     openKabupatenModal,
     closeKabupatenModal,
+    isStatusPenayanganModalOpen,
+    kabupatenPenayanganList,
     openStatusPenayanganModal,
     closeStatusPenayanganModal
   }
