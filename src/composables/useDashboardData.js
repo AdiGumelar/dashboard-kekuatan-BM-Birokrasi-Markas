@@ -10,7 +10,26 @@ import {
 
 // Reactive state singleton
 const boList = ref([])
-const selectedBoKode = ref(null)
+const initialBoFromUrl = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('bo') : null
+const selectedBoKode = ref(initialBoFromUrl)
+
+// Sinkronisasi navigasi popstate (tombol Back / Forward peramban)
+function handlePopState() {
+  if (typeof window === 'undefined') return
+  const params = new URLSearchParams(window.location.search)
+  const boFromUrl = params.get('bo')
+  selectedBoKode.value = boFromUrl || null
+  activeKabupaten.value = null
+  searchQuery.value = ''
+  statusMarkasFilter.value = 'all'
+  kedekatanFilter.value = 'all'
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+if (typeof window !== 'undefined' && !window.__dashboardPopStateInitialized) {
+  window.__dashboardPopStateInitialized = true
+  window.addEventListener('popstate', handlePopState)
+}
 const activeKabupaten = ref(null)
 const searchQuery = ref('')
 const statusMarkasFilter = ref('all') // 'all' | 'wajib' | 'tidak-wajib'
@@ -576,19 +595,43 @@ export function useDashboardData() {
     }
   })
 
-  function selectBo(kodeBo) {
+  function selectBo(kodeBo, pushToHistory = true) {
     selectedBoKode.value = kodeBo
     searchQuery.value = ''
     statusMarkasFilter.value = 'all'
     kedekatanFilter.value = 'all'
+    activeKabupaten.value = null
+
+    if (pushToHistory && typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      if (url.searchParams.get('bo') !== kodeBo) {
+        url.searchParams.set('bo', kodeBo)
+        window.history.pushState({ bo: kodeBo }, '', url.toString())
+      }
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  function clearSelectedBo() {
+  function clearSelectedBo(useHistoryBack = true) {
     selectedBoKode.value = null
     searchQuery.value = ''
     statusMarkasFilter.value = 'all'
     kedekatanFilter.value = 'all'
+    activeKabupaten.value = null
+
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      if (url.searchParams.has('bo')) {
+        if (useHistoryBack && window.history.state && window.history.state.bo) {
+          window.history.back()
+        } else {
+          url.searchParams.delete('bo')
+          window.history.pushState({}, '', url.toString())
+        }
+      }
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
