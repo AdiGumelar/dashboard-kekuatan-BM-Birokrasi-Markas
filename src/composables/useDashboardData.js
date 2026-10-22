@@ -372,8 +372,10 @@ export function useDashboardData() {
       const totalWajib = bo.kabupatenList.filter(k => k.statusMarkasMeta.isWajib).length
       const totalTidakWajib = bo.kabupatenList.filter(k => k.statusMarkasMeta.isTidakWajib).length
       const totalTayang = bo.kabupatenList.filter(k => k.statusPenayanganMeta.isTayang).length
-      const totalBelumTayang = bo.kabupatenList.filter(k => !k.statusPenayanganMeta.isTayang).length
+      const totalProses = bo.kabupatenList.filter(k => k.statusPenayanganMeta.isProses).length
+      const totalBelumTayang = bo.kabupatenList.filter(k => k.statusPenayanganMeta.isBelumTayang).length
       const persenTayang = total > 0 ? Math.round((totalTayang / total) * 100) : 0
+      const persenProses = total > 0 ? Math.round((totalProses / total) * 100) : 0
 
       // Relasi matang = kedekatan dinas Akrab / Relasi Baik (score 4) atau Mitra Strategis (score 5)
       const totalRelasiMatang = bo.kabupatenList.filter(k => k.kedekatanDinas.meta.score >= 4).length
@@ -393,8 +395,10 @@ export function useDashboardData() {
         totalWajibMarkas: totalWajib,
         totalTidakWajibMarkas: totalTidakWajib,
         totalTayang,
+        totalProses,
         totalBelumTayang,
         persenTayang,
+        persenProses,
         totalRelasiMatang,
         persenRelasiMatang,
         avgBirokrasiScore: avgScore,
