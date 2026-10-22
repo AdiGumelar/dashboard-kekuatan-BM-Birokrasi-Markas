@@ -1,10 +1,36 @@
 <script setup>
 import { computed } from "vue";
-import { Building2, MapPin, Users, ShieldAlert, ShieldCheck, Award, ChevronRight, Filter, Search, Sparkles, Compass, ArrowDown } from "@lucide/vue";
+import {
+  Building2,
+  MapPin,
+  Users,
+  ShieldAlert,
+  ShieldCheck,
+  Award,
+  ChevronRight,
+  Filter,
+  Search,
+  Sparkles,
+  Compass,
+  ArrowDown,
+  Tv
+} from "@lucide/vue";
 import { useDashboardData } from "../composables/useDashboardData";
 import StatCard from "./StatCard.vue";
 
-const { filteredBoList, paginatedBoList, hasMoreBo, loadMoreBo, globalStats, amList, amFilter, provinsiList, provinsiFilter, searchQuery, selectBo } = useDashboardData();
+const {
+  filteredBoList,
+  paginatedBoList,
+  hasMoreBo,
+  loadMoreBo,
+  globalStats,
+  amList,
+  amFilter,
+  provinsiList,
+  provinsiFilter,
+  searchQuery,
+  selectBo
+} = useDashboardData();
 </script>
 
 <template>
@@ -19,13 +45,13 @@ const { filteredBoList, paginatedBoList, hasMoreBo, loadMoreBo, globalStats, amL
         </div>
         <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-2">Seluruh Branch Office (BO)</h2>
         <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
-          Menampilkan persebaran kekuatan Branch Manager (BM), status kepatuhan markas, hubungan kedinasan, serta kemitraan organisasi guru (IGTKI, K3S, MKKS) secara terpadu di seluruh Indonesia.
+          Menampilkan persebaran kekuatan Branch Manager (BM), status kepatuhan markas, status penayangan wilayah, hubungan kedinasan, serta kemitraan organisasi guru (IGTKI, K3S, MKKS) secara terpadu di seluruh Indonesia.
         </p>
       </div>
     </div>
 
     <!-- Executive KPI Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
       <StatCard title="Total BO" :value="globalStats.totalBo" subtitle="Kantor Cabang Wilayah" badge-text="Terpetakan" badge-class="bg-indigo-50 text-indigo-700" icon-bg-class="bg-indigo-50 text-indigo-600">
         <template #icon>
           <Building2 class="w-6 h-6" />
@@ -46,6 +72,19 @@ const { filteredBoList, paginatedBoList, hasMoreBo, loadMoreBo, globalStats, amL
       >
         <template #icon>
           <ShieldAlert class="w-6 h-6" />
+        </template>
+      </StatCard>
+
+      <StatCard
+        title="Status Penayangan"
+        :value="globalStats.totalPenayanganTayang"
+        :subtitle="`${globalStats.totalPenayanganBelum} Belum Tayang`"
+        :badge-text="`${globalStats.persenPenayanganTayang}% Tayang`"
+        badge-class="bg-emerald-50 text-emerald-700"
+        icon-bg-class="bg-emerald-50 text-emerald-600"
+      >
+        <template #icon>
+          <Tv class="w-6 h-6" />
         </template>
       </StatCard>
 
@@ -106,9 +145,7 @@ const { filteredBoList, paginatedBoList, hasMoreBo, loadMoreBo, globalStats, amL
 
       <!-- Quick count / reset -->
       <div class="flex items-center justify-between lg:justify-end gap-3 text-xs text-slate-500 shrink-0">
-        <span
-          >Menampilkan <strong class="text-slate-800">{{ paginatedBoList.length }}</strong> dari <strong class="text-slate-800">{{ filteredBoList.length }}</strong> BO</span
-        >
+        <span>Menampilkan <strong class="text-slate-800">{{ paginatedBoList.length }}</strong> dari <strong class="text-slate-800">{{ filteredBoList.length }}</strong> BO</span>
         <button
           v-if="amFilter !== 'all' || provinsiFilter !== 'all' || searchQuery"
           @click="
@@ -163,18 +200,22 @@ const { filteredBoList, paginatedBoList, hasMoreBo, loadMoreBo, globalStats, amL
               </p>
             </div>
 
-            <!-- Mini Metrics Strip: Sebaran Wilayah & Markas -->
-            <div class="grid grid-cols-3 gap-2 p-3 bg-slate-50/80 rounded-xl border border-slate-100 mb-5">
+            <!-- Mini Metrics Strip: Sebaran Wilayah, Markas & Penayangan -->
+            <div class="grid grid-cols-4 gap-1.5 p-2.5 bg-slate-50/80 rounded-xl border border-slate-100 mb-5">
               <div class="text-center">
-                <span class="text-[11px] text-slate-500 block">Total Wilayah</span>
+                <span class="text-[10px] text-slate-500 block truncate">Wilayah</span>
                 <span class="text-base font-extrabold text-slate-800">{{ bo.totalKabupaten }}</span>
               </div>
-              <div class="text-center border-x border-slate-200/60">
-                <span class="text-[11px] text-rose-600 font-semibold block">Wajib Markas</span>
+              <div class="text-center border-l border-slate-200/60">
+                <span class="text-[10px] text-rose-600 font-semibold block truncate">Wajib</span>
                 <span class="text-base font-extrabold text-rose-700">{{ bo.totalWajibMarkas }}</span>
               </div>
-              <div class="text-center">
-                <span class="text-[11px] text-slate-500 font-semibold block">Tidak Wajib</span>
+              <div class="text-center border-l border-slate-200/60">
+                <span class="text-[10px] text-emerald-600 font-semibold block truncate">Tayang</span>
+                <span class="text-base font-extrabold text-emerald-700">{{ bo.totalTayang }}</span>
+              </div>
+              <div class="text-center border-l border-slate-200/60">
+                <span class="text-[10px] text-slate-500 font-semibold block truncate">Tdk Wajib</span>
                 <span class="text-base font-extrabold text-slate-700">{{ bo.totalTidakWajibMarkas }}</span>
               </div>
             </div>

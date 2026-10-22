@@ -24,6 +24,7 @@ function handlePopState() {
   activeKabupaten.value = null
   searchQuery.value = ''
   statusMarkasFilter.value = 'all'
+  statusPenayanganFilter.value = 'all'
   kedekatanFilter.value = 'all'
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
@@ -35,6 +36,7 @@ if (typeof window !== 'undefined' && !window.__dashboardPopStateInitialized) {
 const activeKabupaten = ref(null)
 const searchQuery = ref('')
 const statusMarkasFilter = ref('all') // 'all' | 'wajib' | 'tidak-wajib'
+const statusPenayanganFilter = ref('all') // 'all' | 'tayang' | 'belum'
 const kedekatanFilter = ref('all') // 'all' | '1' | '2' | '3' | '4' | '5'
 const amFilter = ref('all')
 const provinsiFilter = ref('all')
@@ -369,6 +371,10 @@ export function useDashboardData() {
       const total = bo.kabupatenList.length
       const totalWajib = bo.kabupatenList.filter(k => k.statusMarkasMeta.isWajib).length
       const totalTidakWajib = bo.kabupatenList.filter(k => k.statusMarkasMeta.isTidakWajib).length
+      const totalTayang = bo.kabupatenList.filter(k => k.statusPenayanganMeta.isTayang).length
+      const totalBelumTayang = bo.kabupatenList.filter(k => !k.statusPenayanganMeta.isTayang).length
+      const persenTayang = total > 0 ? Math.round((totalTayang / total) * 100) : 0
+
       // Relasi matang = kedekatan dinas Akrab / Relasi Baik (score 4) atau Mitra Strategis (score 5)
       const totalRelasiMatang = bo.kabupatenList.filter(k => k.kedekatanDinas.meta.score >= 4).length
       const persenRelasiMatang = total > 0 ? Math.round((totalRelasiMatang / total) * 100) : 0
@@ -386,6 +392,9 @@ export function useDashboardData() {
         totalKabupaten: total,
         totalWajibMarkas: totalWajib,
         totalTidakWajibMarkas: totalTidakWajib,
+        totalTayang,
+        totalBelumTayang,
+        persenTayang,
         totalRelasiMatang,
         persenRelasiMatang,
         avgBirokrasiScore: avgScore,
@@ -602,6 +611,10 @@ export function useDashboardData() {
       const total = bo.kabupatenList.length
       const totalWajib = bo.kabupatenList.filter(k => k.statusMarkasMeta.isWajib).length
       const totalTidakWajib = bo.kabupatenList.filter(k => k.statusMarkasMeta.isTidakWajib).length
+      const totalTayang = bo.kabupatenList.filter(k => k.statusPenayanganMeta.isTayang).length
+      const totalBelumTayang = bo.kabupatenList.filter(k => !k.statusPenayanganMeta.isTayang).length
+      const persenTayang = total > 0 ? Math.round((totalTayang / total) * 100) : 0
+
       const totalRelasiMatang = bo.kabupatenList.filter(k => k.kedekatanDinas.meta.score >= 4).length
       const persenRelasiMatang = total > 0 ? Math.round((totalRelasiMatang / total) * 100) : 0
 
@@ -618,6 +631,9 @@ export function useDashboardData() {
         totalKabupaten: total,
         totalWajibMarkas: totalWajib,
         totalTidakWajibMarkas: totalTidakWajib,
+        totalTayang,
+        totalBelumTayang,
+        persenTayang,
         totalRelasiMatang,
         persenRelasiMatang,
         avgBirokrasiScore: avgScore,
@@ -790,6 +806,12 @@ export function useDashboardData() {
       list = list.filter(k => k.statusMarkasMeta.isTidakWajib)
     }
 
+    if (statusPenayanganFilter.value === 'tayang') {
+      list = list.filter(k => k.statusPenayanganMeta.isTayang)
+    } else if (statusPenayanganFilter.value === 'belum') {
+      list = list.filter(k => !k.statusPenayanganMeta.isTayang)
+    }
+
     if (kedekatanFilter.value !== 'all') {
       const targetLevel = Number(kedekatanFilter.value)
       list = list.filter(k => {
@@ -822,6 +844,8 @@ export function useDashboardData() {
     let totalKab = 0
     let totalWajib = 0
     let totalTidakWajib = 0
+    let totalTayang = 0
+    let totalBelumTayang = 0
     let totalRelasiMatang = 0
     let sumScore = 0
 
@@ -829,11 +853,14 @@ export function useDashboardData() {
       totalKab += bo.totalKabupaten
       totalWajib += bo.totalWajibMarkas
       totalTidakWajib += bo.totalTidakWajibMarkas
+      totalTayang += (bo.totalTayang || 0)
+      totalBelumTayang += (bo.totalBelumTayang || 0)
       totalRelasiMatang += bo.totalRelasiMatang
       sumScore += (bo.avgBirokrasiScore * bo.totalKabupaten)
     }
 
     const persenRelasiMatang = totalKab > 0 ? Math.round((totalRelasiMatang / totalKab) * 100) : 0
+    const persenTayang = totalKab > 0 ? Math.round((totalTayang / totalKab) * 100) : 0
     const avgScore = totalKab > 0 ? Number((sumScore / totalKab).toFixed(1)) : 0
 
     return {
@@ -841,6 +868,9 @@ export function useDashboardData() {
       totalKabupaten: totalKab,
       totalMarkasWajib: totalWajib,
       totalMarkasTidakWajib: totalTidakWajib,
+      totalPenayanganTayang: totalTayang,
+      totalPenayanganBelum: totalBelumTayang,
+      persenPenayanganTayang: persenTayang,
       totalRelasiMatang,
       persenRelasiMatang,
       avgBirokrasiScore: avgScore,
@@ -852,6 +882,7 @@ export function useDashboardData() {
     selectedBoKode.value = kodeBo
     searchQuery.value = ''
     statusMarkasFilter.value = 'all'
+    statusPenayanganFilter.value = 'all'
     kedekatanFilter.value = 'all'
     activeKabupaten.value = null
 
@@ -870,6 +901,7 @@ export function useDashboardData() {
     selectedBoKode.value = null
     searchQuery.value = ''
     statusMarkasFilter.value = 'all'
+    statusPenayanganFilter.value = 'all'
     kedekatanFilter.value = 'all'
     activeKabupaten.value = null
 
@@ -903,6 +935,7 @@ export function useDashboardData() {
     activeKabupaten,
     searchQuery,
     statusMarkasFilter,
+    statusPenayanganFilter,
     kedekatanFilter,
     amFilter,
     provinsiFilter,

@@ -182,6 +182,9 @@ export function getStatusPenayanganMeta(status) {
     return {
       label: '-',
       isEmpty: true,
+      isTayang: false,
+      isBelumTayang: true,
+      isProses: false,
       badgeClass: 'bg-slate-50 text-slate-400 border-slate-200/60',
       indicatorClass: 'bg-slate-300',
       textClass: 'text-slate-400',
@@ -203,6 +206,9 @@ export function getStatusPenayanganMeta(status) {
     return {
       label: rawLabel,
       isEmpty: false,
+      isTayang: true,
+      isBelumTayang: false,
+      isProses: false,
       badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-1 ring-emerald-500/20',
       indicatorClass: 'bg-emerald-500',
       textClass: 'text-emerald-700',
@@ -221,6 +227,9 @@ export function getStatusPenayanganMeta(status) {
     return {
       label: rawLabel,
       isEmpty: false,
+      isTayang: false,
+      isBelumTayang: false,
+      isProses: true,
       badgeClass: 'bg-amber-50 text-amber-700 border-amber-200 ring-1 ring-amber-500/20',
       indicatorClass: 'bg-amber-500',
       textClass: 'text-amber-700',
@@ -238,6 +247,9 @@ export function getStatusPenayanganMeta(status) {
     return {
       label: rawLabel,
       isEmpty: false,
+      isTayang: false,
+      isBelumTayang: true,
+      isProses: false,
       badgeClass: 'bg-slate-100 text-slate-600 border-slate-200',
       indicatorClass: 'bg-slate-400',
       textClass: 'text-slate-600',
@@ -249,6 +261,9 @@ export function getStatusPenayanganMeta(status) {
   return {
     label: rawLabel,
     isEmpty: false,
+    isTayang: true,
+    isBelumTayang: false,
+    isProses: false,
     badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200',
     indicatorClass: 'bg-indigo-500',
     textClass: 'text-indigo-700',

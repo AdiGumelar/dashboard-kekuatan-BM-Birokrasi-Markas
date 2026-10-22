@@ -22,6 +22,7 @@ const {
   filteredKabupatenList,
   searchQuery,
   statusMarkasFilter,
+  statusPenayanganFilter,
   kedekatanFilter,
   viewMode
 } = useDashboardData()
@@ -69,12 +70,12 @@ const {
               {{ selectedBo.namaBo }}
             </h2>
             <p class="text-slate-300 text-xs sm:text-sm max-w-2xl leading-relaxed">
-              Memantau {{ selectedBo.totalKabupaten }} wilayah operasional. Tinjau kewajiban status markas, hubungan kedinasan, dan kemitraan organisasi guru (IGTKI, K3S, MKKS) di bawah naungan BO ini.
+              Memantau {{ selectedBo.totalKabupaten }} wilayah operasional. Tinjau kewajiban status markas, status penayangan, hubungan kedinasan, dan kemitraan organisasi guru (IGTKI, K3S, MKKS) di bawah naungan BO ini.
             </p>
           </div>
 
           <!-- Quick Metrics in Hero -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 shrink-0">
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 shrink-0">
             <div class="text-center px-2">
               <span class="text-[11px] text-slate-300 block">Total Wilayah</span>
               <span class="text-xl font-extrabold text-white">{{ selectedBo.totalKabupaten }}</span>
@@ -82,6 +83,10 @@ const {
             <div class="text-center px-2 border-l border-white/10">
               <span class="text-[11px] text-rose-300 font-semibold block">Wajib Markas</span>
               <span class="text-xl font-extrabold text-rose-300">{{ selectedBo.totalWajibMarkas }}</span>
+            </div>
+            <div class="text-center px-2 border-l border-white/10">
+              <span class="text-[11px] text-emerald-300 font-semibold block">Sudah Tayang</span>
+              <span class="text-xl font-extrabold text-emerald-300">{{ selectedBo.totalTayang }}</span>
             </div>
             <div class="text-center px-2 border-l border-white/10">
               <span class="text-[11px] text-slate-300 font-semibold block">Tidak Wajib</span>
@@ -123,6 +128,19 @@ const {
           </select>
         </div>
 
+        <!-- Filter Status Penayangan -->
+        <div class="flex items-center gap-1.5 text-xs">
+          <span class="text-slate-500 font-medium">Penayangan:</span>
+          <select
+            v-model="statusPenayanganFilter"
+            class="text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-hidden focus:border-indigo-400 cursor-pointer"
+          >
+            <option value="all">Semua Penayangan</option>
+            <option value="tayang">Hanya Tayang</option>
+            <option value="belum">Hanya Belum Tayang</option>
+          </select>
+        </div>
+
         <!-- Filter Kedekatan -->
         <div class="flex items-center gap-1.5 text-xs">
           <span class="text-slate-500 font-medium">Kedekatan:</span>
@@ -148,8 +166,8 @@ const {
 
         <!-- Reset Button -->
         <button
-          v-if="statusMarkasFilter !== 'all' || kedekatanFilter !== 'all' || searchQuery"
-          @click="statusMarkasFilter = 'all'; kedekatanFilter = 'all'; searchQuery = ''"
+          v-if="statusMarkasFilter !== 'all' || statusPenayanganFilter !== 'all' || kedekatanFilter !== 'all' || searchQuery"
+          @click="statusMarkasFilter = 'all'; statusPenayanganFilter = 'all'; kedekatanFilter = 'all'; searchQuery = ''"
           class="text-xs text-indigo-600 hover:text-indigo-700 font-semibold underline underline-offset-2 cursor-pointer"
         >
           Reset
@@ -183,10 +201,12 @@ const {
       </div>
     </div>
 
-    <!-- Kabupaten Content -->
+    <!-- Kabupaten Content: Cards Grid vs Table -->
     <div v-if="filteredKabupatenList.length > 0">
-      <!-- Card View -->
-      <div v-if="viewMode === 'card'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div
+        v-if="viewMode === 'card'"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+      >
         <KabupatenCard
           v-for="kab in filteredKabupatenList"
           :key="kab.kabId"
@@ -194,28 +214,27 @@ const {
         />
       </div>
 
-      <!-- Table View -->
-      <div v-else>
-        <KabupatenTable :kabupaten-list="filteredKabupatenList" />
-      </div>
+      <KabupatenTable
+        v-else
+        :kabupaten-list="filteredKabupatenList"
+      />
     </div>
 
-    <!-- Empty State for Filter -->
+    <!-- Empty State -->
     <div v-else class="text-center py-16 bg-white rounded-2xl border border-slate-200 p-8 shadow-xs">
-      <div class="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400 mb-3">
-        <Search class="w-7 h-7" />
+      <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400 mb-4">
+        <Search class="w-8 h-8" />
       </div>
-      <h3 class="text-base font-bold text-slate-800 mb-1">Kabupaten tidak ditemukan</h3>
-      <p class="text-xs text-slate-500 max-w-sm mx-auto mb-4">
-        Tidak ada kabupaten di bawah BO ini yang cocok dengan filter atau kata kunci yang Anda masukkan.
+      <h3 class="text-lg font-bold text-slate-800 mb-1">Tidak ada wilayah yang cocok</h3>
+      <p class="text-sm text-slate-500 max-w-md mx-auto mb-5">
+        Coba sesuaikan kata kunci pencarian, filter status markas, atau filter status penayangan.
       </p>
       <button
-        @click="statusMarkasFilter = 'all'; kedekatanFilter = 'all'; searchQuery = ''"
-        class="px-4 py-2 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors cursor-pointer"
+        @click="statusMarkasFilter = 'all'; statusPenayanganFilter = 'all'; kedekatanFilter = 'all'; searchQuery = ''"
+        class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors cursor-pointer"
       >
-        Reset Filter & Pencarian
+        Reset Semua Filter
       </button>
     </div>
   </div>
 </template>
-
