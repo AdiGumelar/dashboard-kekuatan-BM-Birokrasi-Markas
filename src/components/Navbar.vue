@@ -29,18 +29,17 @@ const { isLoading, isUsingMock, lastSyncTime, errorMessage, loadData, clearSelec
           </div>
         </div>
 
-        <!-- Controls: Actions -->
+        <!-- Controls: Actions (Di-comment agar kode tidak hilang sesuai permintaan) -->
+        <!--
         <div class="flex items-center space-x-3">
-          <!-- Data Source Badge -->
           <div class="flex items-center px-3 py-1.5 rounded-xl border text-xs" :class="isUsingMock ? 'bg-amber-50/70 border-amber-200 text-amber-800' : 'bg-emerald-50/70 border-emerald-200 text-emerald-800'">
             <div class="w-2 h-2 rounded-full mr-2" :class="isUsingMock ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'"></div>
             <div class="leading-tight">
-              <span class="font-semibold block">{{ isUsingMock ? "Mode Data Bawaan" : "Google Sheets Terhubung" }}</span>
+              <span class="font-semibold block">{{ isUsingMock ? 'Mode Data Bawaan' : 'Google Sheets Terhubung' }}</span>
               <span class="text-[10px] opacity-75">Update: {{ formatDateTime(lastSyncTime) }}</span>
             </div>
           </div>
 
-          <!-- Refresh Button -->
           <button
             @click="loadData"
             :disabled="isLoading"
@@ -48,9 +47,10 @@ const { isLoading, isUsingMock, lastSyncTime, errorMessage, loadData, clearSelec
             class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-2xs hover:border-slate-300 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
           >
             <RefreshCw class="w-3.5 h-3.5 text-indigo-600" :class="{ 'animate-spin': isLoading }" />
-            <span class="hidden sm:inline">{{ isLoading ? "Sinkron..." : "Sinkronkan" }}</span>
+            <span class="hidden sm:inline">{{ isLoading ? 'Sinkron...' : 'Sinkronkan' }}</span>
           </button>
         </div>
+        -->
       </div>
     </div>
 

@@ -184,7 +184,7 @@ const { filteredBoList, paginatedBoList, hasMoreBo, loadMoreBo, globalStats, amL
               <!-- Relasi Dinas Matang Bar -->
               <div>
                 <div class="flex items-center justify-between text-slate-600 font-medium mb-1">
-                  <span>Relasi Dinas Matang (Akrab/Mitra)</span>
+                  <span>Relasi Dinas (Akrab/Mitra)</span>
                   <span class="font-bold text-slate-800">{{ bo.totalRelasiMatang }} / {{ bo.totalKabupaten }} ({{ bo.persenRelasiMatang }}%)</span>
                 </div>
                 <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">

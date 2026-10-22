@@ -393,9 +393,14 @@ export function useDashboardData() {
     }
 
     try {
+      // Parameter cache-buster (_t) dan cache: 'no-cache' memastikan data langsung tersinkronkan segar dari Google Sheets setiap kali website dibuka
+      const cacheBuster = '_t=' + Date.now();
+      const fetchUrl1 = url1.includes('?') ? (url1 + '&' + cacheBuster) : (url1 + '?' + cacheBuster);
+      const fetchUrl2 = url2.includes('?') ? (url2 + '&' + cacheBuster) : (url2 + '?' + cacheBuster);
+
       const [res1, res2] = await Promise.all([
-        fetch(url1),
-        fetch(url2)
+        fetch(fetchUrl1, { cache: 'no-cache' }),
+        fetch(fetchUrl2, { cache: 'no-cache' })
       ])
 
       if (!res1.ok) throw new Error(`Gagal mengunduh Sheet 1: HTTP ${res1.status}`)
