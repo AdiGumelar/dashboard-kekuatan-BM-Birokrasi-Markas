@@ -1,9 +1,15 @@
 <script setup>
-import { Building2, RefreshCw, AlertCircle } from "@lucide/vue";
+import { Building2, ShieldCheck, User, LogOut, AlertCircle } from "@lucide/vue";
 import { useDashboardData } from "../composables/useDashboardData";
-import { formatDateTime } from "../utils/dataHelpers";
+import { useAuth } from "../composables/useAuth";
 
-const { isLoading, isUsingMock, lastSyncTime, errorMessage, loadData, clearSelectedBo } = useDashboardData();
+const { errorMessage, clearSelectedBo } = useDashboardData();
+const { currentUser, isAuthenticated, isAdmin, isAm, currentAmCode, logout } = useAuth();
+
+function handleLogout() {
+  clearSelectedBo(false);
+  logout();
+}
 </script>
 
 <template>
@@ -27,6 +33,32 @@ const { isLoading, isUsingMock, lastSyncTime, errorMessage, loadData, clearSelec
               <span>Status Markas</span>
             </p>
           </div>
+        </div>
+
+        <!-- User Profile & Logout Section -->
+        <div v-if="isAuthenticated" class="flex items-center space-x-3">
+          <!-- Role Badge -->
+          <div
+            class="flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold"
+            :class="isAdmin ? 'bg-indigo-50 border-indigo-200 text-indigo-800' : 'bg-emerald-50 border-emerald-200 text-emerald-800'"
+          >
+            <ShieldCheck v-if="isAdmin" class="w-4 h-4 text-indigo-600" />
+            <User v-else class="w-4 h-4 text-emerald-600" />
+            <div class="leading-tight">
+              <span class="block font-bold">{{ isAdmin ? 'Administrator' : currentAmCode }}</span>
+              <span class="text-[10px] font-normal opacity-75 block">{{ isAdmin ? 'Semua Wilayah' : 'Wilayah Terkunci' }}</span>
+            </div>
+          </div>
+
+          <!-- Logout Button -->
+          <button
+            @click="handleLogout"
+            title="Keluar / Ganti Akun"
+            class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-600 hover:text-rose-600 bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-xl transition-all cursor-pointer shadow-2xs"
+          >
+            <LogOut class="w-3.5 h-3.5" />
+            <span class="hidden sm:inline">Keluar</span>
+          </button>
         </div>
 
         <!-- Controls: Actions (Di-comment agar kode tidak hilang sesuai permintaan) -->

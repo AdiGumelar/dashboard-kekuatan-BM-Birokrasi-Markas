@@ -1,13 +1,17 @@
 <script setup>
 import { onMounted } from "vue";
 import { useDashboardData } from "./composables/useDashboardData";
+import { useAuth } from "./composables/useAuth";
 import Navbar from "./components/Navbar.vue";
 import BoOverview from "./components/BoOverview.vue";
 import BoDetail from "./components/BoDetail.vue";
 import KabupatenDetailModal from "./components/KabupatenDetailModal.vue";
+import StatusPenayanganModal from "./components/StatusPenayanganModal.vue";
+import LoginModal from "./components/LoginModal.vue";
 import { Building2, Sparkles, Database, FileSpreadsheet } from "@lucide/vue";
 
-const { selectedBo, isLoading, loadData, isUsingMock } = useDashboardData();
+const { selectedBo, isLoading, loadData, isUsingMock, rawAmList } = useDashboardData();
+const { isAuthenticated } = useAuth();
 
 onMounted(() => {
   // Ambil data Google Spreadsheet hanya saat pertama kali web dibuka atau saat di-refresh
@@ -17,6 +21,9 @@ onMounted(() => {
 
 <template>
   <div class="min-h-screen flex flex-col bg-slate-50 text-slate-800">
+    <!-- Modal Login (Muncul jika belum login) -->
+    <LoginModal v-if="!isAuthenticated" :amList="rawAmList" />
+
     <!-- Navbar Header -->
     <Navbar />
 
@@ -42,6 +49,9 @@ onMounted(() => {
 
     <!-- Modal Detail Kabupaten -->
     <KabupatenDetailModal />
+
+    <!-- Modal Rincian Status Penayangan -->
+    <StatusPenayanganModal />
 
     <!-- Footer -->
     <footer class="mt-auto border-t border-slate-200/80 bg-white py-6">

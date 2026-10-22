@@ -2,6 +2,7 @@ import { ref, computed, watch } from 'vue'
 import Papa from 'papaparse'
 import { SHEETS_CONFIG } from '../config/sheetsConfig.js'
 import { MOCK_SHEET_1_BM_BIROKRASI, MOCK_SHEET_2_MARKAS, MOCK_SHEET_3_PENAYANGAN } from '../data/mockData.js'
+import { useAuth } from './useAuth.js'
 import {
   getKedekatanMeta,
   getStatusMarkasMeta,
@@ -34,6 +35,7 @@ if (typeof window !== 'undefined' && !window.__dashboardPopStateInitialized) {
   window.addEventListener('popstate', handlePopState)
 }
 const activeKabupaten = ref(null)
+const isStatusPenayanganModalOpen = ref(false)
 const searchQuery = ref('')
 const statusMarkasFilter = ref('all') // 'all' | 'wajib' | 'tidak-wajib'
 const statusPenayanganFilter = ref('all') // 'all' | 'tayang' | 'proses' | 'belum'
@@ -663,6 +665,7 @@ export function useDashboardData() {
     const url1 = SHEETS_CONFIG.SPREADSHEET_1_BM_BIROKRASI_CSV_URL?.trim()
     const url2 = SHEETS_CONFIG.SPREADSHEET_2_MARKAS_CSV_URL?.trim()
     const url3 = SHEETS_CONFIG.SPREADSHEET_3_PENAYANGAN_CSV_URL?.trim()
+    const url4 = SHEETS_CONFIG.SPREADSHEET_4_AKUN_CSV_URL?.trim()
 
     if (!url1 || !url2) {
       processAndMergeData(MOCK_SHEET_1_BM_BIROKRASI, MOCK_SHEET_2_MARKAS, MOCK_SHEET_3_PENAYANGAN)
@@ -678,6 +681,7 @@ export function useDashboardData() {
       const fetchUrl1 = url1.includes('?') ? (url1 + '&' + cacheBuster) : (url1 + '?' + cacheBuster)
       const fetchUrl2 = url2.includes('?') ? (url2 + '&' + cacheBuster) : (url2 + '?' + cacheBuster)
       const fetchUrl3 = url3 ? (url3.includes('?') ? (url3 + '&' + cacheBuster) : (url3 + '?' + cacheBuster)) : null
+      const fetchUrl4 = url4 ? (url4.includes('?') ? (url4 + '&' + cacheBuster) : (url4 + '?' + cacheBuster)) : null
 
       const fetchPromises = [
         fetch(fetchUrl1, { cache: 'no-cache' }),
@@ -693,7 +697,16 @@ export function useDashboardData() {
         )
       }
 
-      const [res1, res2, res3] = await Promise.all(fetchPromises)
+      if (fetchUrl4) {
+        fetchPromises.push(
+          fetch(fetchUrl4, { cache: 'no-cache' }).catch(err => {
+            console.warn('Gagal memuat Sheet 4 Akun:', err)
+            return null
+          })
+        )
+      }
+
+      const [res1, res2, res3, res4] = await Promise.all(fetchPromises)
 
       if (!res1.ok) throw new Error(`Gagal mengunduh Sheet 1: HTTP ${res1.status}`)
       if (!res2.ok) throw new Error(`Gagal mengunduh Sheet 2: HTTP ${res2.status}`)
@@ -701,14 +714,21 @@ export function useDashboardData() {
       const text1 = await res1.text()
       const text2 = await res2.text()
       const text3 = res3 && res3.ok ? await res3.text() : ''
+      const text4 = res4 && res4.ok ? await res4.text() : ''
 
       // Parse sebagai 2D array mentah agar aman untuk multi-tier headers
       const parsed1 = Papa.parse(text1, { skipEmptyLines: true })
       const parsed2 = Papa.parse(text2, { skipEmptyLines: true })
       const parsed3 = text3 ? Papa.parse(text3, { skipEmptyLines: true }) : { data: [] }
+      const parsed4 = text4 ? Papa.parse(text4, { skipEmptyLines: true }) : { data: [] }
 
       if (parsed1.data.length === 0 || parsed2.data.length === 0) {
         throw new Error('Data spreadsheet kosong')
+      }
+
+      // Perbarui akun & PIN dari Sheet 4
+      if (parsed4.data && parsed4.data.length > 0) {
+        setAmAccountsFromRows(parsed4.data)
       }
 
       parseSheetDataFromArrays(parsed1.data, parsed2.data, parsed3.data)
@@ -725,26 +745,69 @@ export function useDashboardData() {
     }
   }
 
-  const selectedBo = computed(() => {
-    if (!selectedBoKode.value) return null
-    return boList.value.find(b => b.kodeBo === selectedBoKode.value) || null
-  })
+  const { currentUser, isAuthenticated, isAdmin, isAm, currentAmCode, sheetAmList, setAmAccountsFromRows } = useAuth()
 
-  // Daftar unik Area Manager (AM)
-  const amList = computed(() => {
+  // Seluruh daftar unik Area Manager dari dataset dan sheet Akun (untuk dropdown modal login)
+  const rawAmList = computed(() => {
     const list = new Set()
+    if (sheetAmList.value && sheetAmList.value.length > 0) {
+      for (const am of sheetAmList.value) list.add(am)
+    }
     for (const bo of boList.value) {
       if (bo.am && bo.am !== '-') list.add(bo.am)
     }
     return Array.from(list).sort()
   })
 
-  // Daftar unik Provinsi (otomatis menyesuaikan jika AM dipilih)
+  // Daftar BO yang dapat diakses oleh user aktif (jika role AM, hanya BO milik AM tersebut)
+  const scopedBoList = computed(() => {
+    if (!isAm.value || !currentAmCode.value) {
+      return boList.value
+    }
+    const targetNorm = currentAmCode.value.replace(/\s+/g, '').toUpperCase()
+    return boList.value.filter(bo => {
+      const boNorm = (bo.am || '').replace(/\s+/g, '').toUpperCase()
+      return boNorm === targetNorm
+    })
+  })
+
+  const selectedBo = computed(() => {
+    if (!selectedBoKode.value) return null
+    return scopedBoList.value.find(b => b.kodeBo === selectedBoKode.value) || null
+  })
+
+  // Daftar unik Area Manager (AM) untuk dropdown filter
+  const amList = computed(() => {
+    if (isAm.value && currentAmCode.value) {
+      return [currentAmCode.value]
+    }
+    return rawAmList.value
+  })
+
+  // Sinkronisasi otomatis amFilter jika login sebagai AM
+  watch([isAm, currentAmCode], ([amStatus, amCode]) => {
+    if (amStatus && amCode) {
+      amFilter.value = amCode
+      // Jika BO yang sedang dibuka tidak berada di wilayah AM aktif, reset ke overview
+      if (selectedBoKode.value) {
+        const exists = scopedBoList.value.some(b => b.kodeBo === selectedBoKode.value)
+        if (!exists) {
+          clearSelectedBo(false)
+        }
+      }
+    } else {
+      if (amFilter.value !== 'all') {
+        amFilter.value = 'all'
+      }
+    }
+  }, { immediate: true })
+
+  // Daftar unik Provinsi (otomatis menyesuaikan jika AM dipilih atau user login sebagai AM)
   const provinsiList = computed(() => {
     const list = new Set()
-    const sourceBos = amFilter.value !== 'all'
-      ? boList.value.filter(bo => bo.am === amFilter.value)
-      : boList.value
+    const sourceBos = (amFilter.value !== 'all' && !isAm.value)
+      ? scopedBoList.value.filter(bo => bo.am === amFilter.value)
+      : scopedBoList.value
 
     for (const bo of sourceBos) {
       if (bo.provinsi && bo.provinsi !== '-') list.add(bo.provinsi)
@@ -766,9 +829,9 @@ export function useDashboardData() {
 
   // Filter daftar BO pada overview view
   const filteredBoList = computed(() => {
-    let result = boList.value
+    let result = scopedBoList.value
 
-    if (amFilter.value !== 'all') {
+    if (amFilter.value !== 'all' && !isAm.value) {
       result = result.filter(bo => bo.am === amFilter.value)
     }
 
@@ -867,9 +930,9 @@ export function useDashboardData() {
     return list
   })
 
-  // Statistik Agregat Global Dashboard
+  // Statistik Agregat Global Dashboard (disesuaikan dengan cakupan pengguna aktif)
   const globalStats = computed(() => {
-    const totalBo = boList.value.length
+    const totalBo = scopedBoList.value.length
     let totalKab = 0
     let totalWajib = 0
     let totalTidakWajib = 0
@@ -879,7 +942,7 @@ export function useDashboardData() {
     let totalRelasiMatang = 0
     let sumScore = 0
 
-    for (const bo of boList.value) {
+    for (const bo of scopedBoList.value) {
       totalKab += bo.totalKabupaten
       totalWajib += bo.totalWajibMarkas
       totalTidakWajib += bo.totalTidakWajibMarkas
@@ -962,11 +1025,44 @@ export function useDashboardData() {
     activeKabupaten.value = null
   }
 
+  function openStatusPenayanganModal() {
+    isStatusPenayanganModalOpen.value = true
+  }
+
+  function closeStatusPenayanganModal() {
+    isStatusPenayanganModalOpen.value = false
+  }
+
+  // Daftar seluruh kabupaten yang memiliki data status penayangan terdata (bukan kosong / '-')
+  const kabupatenPenayanganList = computed(() => {
+    const list = []
+    const sourceBos = filteredBoList.value
+
+    for (const bo of sourceBos) {
+      if (!Array.isArray(bo.kabupatenList)) continue
+      for (const kab of bo.kabupatenList) {
+        if (kab.statusPenayanganMeta && !kab.statusPenayanganMeta.isEmpty) {
+          list.push({
+            ...kab,
+            kodeBo: bo.kodeBo,
+            namaBo: bo.namaBo,
+            am: bo.am
+          })
+        }
+      }
+    }
+    return list.sort((a, b) => a.kabupaten.localeCompare(b.kabupaten))
+  })
+
   return {
+    rawAmList,
+    scopedBoList,
     boList,
     selectedBoKode,
     selectedBo,
     activeKabupaten,
+    isStatusPenayanganModalOpen,
+    kabupatenPenayanganList,
     searchQuery,
     statusMarkasFilter,
     statusPenayanganFilter,
@@ -990,6 +1086,8 @@ export function useDashboardData() {
     selectBo,
     clearSelectedBo,
     openKabupatenModal,
-    closeKabupatenModal
+    closeKabupatenModal,
+    openStatusPenayanganModal,
+    closeStatusPenayanganModal
   }
 }

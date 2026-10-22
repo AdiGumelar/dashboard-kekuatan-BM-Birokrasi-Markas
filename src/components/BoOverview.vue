@@ -16,6 +16,7 @@ import {
   Tv
 } from "@lucide/vue";
 import { useDashboardData } from "../composables/useDashboardData";
+import { useAuth } from "../composables/useAuth";
 import StatCard from "./StatCard.vue";
 
 const {
@@ -29,8 +30,11 @@ const {
   provinsiList,
   provinsiFilter,
   searchQuery,
-  selectBo
+  selectBo,
+  openStatusPenayanganModal
 } = useDashboardData();
+
+const { isAdmin, isAm, currentAmCode } = useAuth();
 </script>
 
 <template>
@@ -41,11 +45,15 @@ const {
       <div class="relative z-10 max-w-3xl">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold text-indigo-200 mb-3 border border-white/10">
           <Sparkles class="w-3.5 h-3.5 text-indigo-300" />
-          <span>Sistem Monitoring Kekuatan Wilayah Terintegrasi</span>
+          <span>{{ isAm ? `Sistem Monitoring Wilayah ${currentAmCode}` : 'Sistem Monitoring Kekuatan Wilayah Terintegrasi' }}</span>
         </div>
-        <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-2">Seluruh Branch Office (BO)</h2>
+        <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-2">
+          {{ isAm ? `Wilayah Area Manager (${currentAmCode})` : 'Seluruh Branch Office (BO)' }}
+        </h2>
         <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
-          Menampilkan persebaran kekuatan Branch Manager (BM), status kepatuhan markas, status penayangan wilayah, hubungan kedinasan, serta kemitraan organisasi guru (IGTKI, K3S, MKKS) secara terpadu di seluruh Indonesia.
+          {{ isAm
+            ? `Menampilkan persebaran kekuatan Branch Manager (BM), status kepatuhan markas, status penayangan wilayah, hubungan kedinasan, serta kemitraan organisasi guru di wilayah ${currentAmCode}.`
+            : 'Menampilkan persebaran kekuatan Branch Manager (BM), status kepatuhan markas, status penayangan wilayah, hubungan kedinasan, serta kemitraan organisasi guru (IGTKI, K3S, MKKS) secara terpadu di seluruh Indonesia.' }}
         </p>
       </div>
     </div>
@@ -76,12 +84,14 @@ const {
       </StatCard>
 
       <StatCard
+        @click="openStatusPenayanganModal"
         title="Status Penayangan"
         :value="globalStats.totalPenayanganTayang"
         :subtitle="`${globalStats.totalPenayanganProses} Proses · ${globalStats.totalPenayanganBelum} Belum`"
         :badge-text="`${globalStats.persenPenayanganTayang}% Tayang`"
         badge-class="bg-emerald-50 text-emerald-700"
         icon-bg-class="bg-emerald-50 text-emerald-600"
+        class="cursor-pointer hover:border-emerald-300 hover:ring-2 hover:ring-emerald-200/60 hover:-translate-y-0.5 active:scale-[0.99] transition-all select-none"
       >
         <template #icon>
           <Tv class="w-6 h-6" />
@@ -116,8 +126,14 @@ const {
           />
         </div>
 
-        <!-- Filter Area Manager -->
-        <div class="flex items-center gap-2">
+        <!-- Filter Area Manager (Terkunci untuk role AM) -->
+        <div v-if="isAm" class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg text-xs font-bold text-emerald-800">
+          <Filter class="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+          <span>AM: {{ currentAmCode }} (Terkunci)</span>
+        </div>
+
+        <!-- Filter Area Manager (Bebas untuk Administrator) -->
+        <div v-else class="flex items-center gap-2">
           <Filter class="w-4 h-4 text-slate-400 shrink-0" />
           <span class="text-xs font-semibold text-slate-600">AM:</span>
           <select
@@ -147,9 +163,9 @@ const {
       <div class="flex items-center justify-between lg:justify-end gap-3 text-xs text-slate-500 shrink-0">
         <span>Menampilkan <strong class="text-slate-800">{{ paginatedBoList.length }}</strong> dari <strong class="text-slate-800">{{ filteredBoList.length }}</strong> BO</span>
         <button
-          v-if="amFilter !== 'all' || provinsiFilter !== 'all' || searchQuery"
+          v-if="(isAdmin && amFilter !== 'all') || provinsiFilter !== 'all' || searchQuery"
           @click="
-            amFilter = 'all';
+            if (isAdmin) amFilter = 'all';
             provinsiFilter = 'all';
             searchQuery = '';
           "
