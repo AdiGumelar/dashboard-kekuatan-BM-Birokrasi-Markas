@@ -17,7 +17,7 @@ const statusMarkasFilter = ref('all') // 'all' | 'wajib' | 'tidak-wajib'
 const kedekatanFilter = ref('all') // 'all' | '1' | '2' | '3' | '4' | '5'
 const amFilter = ref('all')
 const provinsiFilter = ref('all')
-const viewMode = ref('card') // 'card' | 'table'
+const viewMode = ref('table') // 'card' | 'table'
 
 const isLoading = ref(false)
 const isUsingMock = ref(false)
