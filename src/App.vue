@@ -5,6 +5,7 @@ import Navbar from "./components/Navbar.vue";
 import BoOverview from "./components/BoOverview.vue";
 import BoDetail from "./components/BoDetail.vue";
 import KabupatenDetailModal from "./components/KabupatenDetailModal.vue";
+import StatusPenayanganModal from "./components/StatusPenayanganModal.vue";
 import { Building2, Sparkles, Database, FileSpreadsheet } from "@lucide/vue";
 
 const { selectedBo, isLoading, loadData, isUsingMock } = useDashboardData();
@@ -42,6 +43,9 @@ onMounted(() => {
 
     <!-- Modal Detail Kabupaten -->
     <KabupatenDetailModal />
+
+    <!-- Modal Status Penayangan -->
+    <StatusPenayanganModal />
 
     <!-- Footer -->
     <footer class="mt-auto border-t border-slate-200/80 bg-white py-6">

@@ -34,6 +34,7 @@ if (typeof window !== 'undefined' && !window.__dashboardPopStateInitialized) {
   window.addEventListener('popstate', handlePopState)
 }
 const activeKabupaten = ref(null)
+const isStatusPenayanganModalOpen = ref(false)
 const searchQuery = ref('')
 const statusMarkasFilter = ref('all') // 'all' | 'wajib' | 'tidak-wajib'
 const statusPenayanganFilter = ref('all') // 'all' | 'tayang' | 'proses' | 'belum'
@@ -962,6 +963,35 @@ export function useDashboardData() {
     activeKabupaten.value = null
   }
 
+  function openStatusPenayanganModal() {
+    isStatusPenayanganModalOpen.value = true
+  }
+
+  function closeStatusPenayanganModal() {
+    isStatusPenayanganModalOpen.value = false
+  }
+
+  // Daftar seluruh kabupaten yang memiliki data status penayangan terdata (bukan kosong / '-')
+  const kabupatenPenayanganList = computed(() => {
+    const list = []
+    const sourceBos = filteredBoList.value
+
+    for (const bo of sourceBos) {
+      if (!Array.isArray(bo.kabupatenList)) continue
+      for (const kab of bo.kabupatenList) {
+        if (kab.statusPenayanganMeta && !kab.statusPenayanganMeta.isEmpty) {
+          list.push({
+            ...kab,
+            kodeBo: bo.kodeBo,
+            namaBo: bo.namaBo,
+            am: bo.am
+          })
+        }
+      }
+    }
+    return list.sort((a, b) => a.kabupaten.localeCompare(b.kabupaten))
+  })
+
   return {
     boList,
     selectedBoKode,
@@ -990,6 +1020,10 @@ export function useDashboardData() {
     selectBo,
     clearSelectedBo,
     openKabupatenModal,
-    closeKabupatenModal
+    closeKabupatenModal,
+    isStatusPenayanganModalOpen,
+    kabupatenPenayanganList,
+    openStatusPenayanganModal,
+    closeStatusPenayanganModal
   }
 }

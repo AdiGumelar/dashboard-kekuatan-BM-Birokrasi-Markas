@@ -29,7 +29,8 @@ const {
   provinsiList,
   provinsiFilter,
   searchQuery,
-  selectBo
+  selectBo,
+  openStatusPenayanganModal
 } = useDashboardData();
 </script>
 
@@ -82,6 +83,8 @@ const {
         :badge-text="`${globalStats.persenPenayanganTayang}% Tayang`"
         badge-class="bg-emerald-50 text-emerald-700"
         icon-bg-class="bg-emerald-50 text-emerald-600"
+        class="cursor-pointer hover:border-emerald-300 hover:ring-2 hover:ring-emerald-200/60 transition-all select-none"
+        @click="openStatusPenayanganModal"
       >
         <template #icon>
           <Tv class="w-6 h-6" />
