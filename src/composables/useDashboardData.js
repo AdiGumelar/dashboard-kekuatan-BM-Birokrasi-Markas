@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import Papa from 'papaparse'
 import { SHEETS_CONFIG } from '../config/sheetsConfig.js'
 import { MOCK_SHEET_1_BM_BIROKRASI, MOCK_SHEET_2_MARKAS, MOCK_SHEET_3_PENAYANGAN } from '../data/mockData.js'
@@ -731,13 +731,29 @@ export function useDashboardData() {
     return Array.from(list).sort()
   })
 
-  // Daftar unik Provinsi
+  // Daftar unik Provinsi (otomatis menyesuaikan jika AM dipilih)
   const provinsiList = computed(() => {
     const list = new Set()
-    for (const bo of boList.value) {
+    const sourceBos = amFilter.value !== 'all'
+      ? boList.value.filter(bo => bo.am === amFilter.value)
+      : boList.value
+
+    for (const bo of sourceBos) {
       if (bo.provinsi && bo.provinsi !== '-') list.add(bo.provinsi)
+      if (Array.isArray(bo.kabupatenList)) {
+        for (const kab of bo.kabupatenList) {
+          if (kab.provinsi && kab.provinsi !== '-') list.add(kab.provinsi)
+        }
+      }
     }
     return Array.from(list).sort()
+  })
+
+  // Sinkronkan filter provinsi jika AM berubah
+  watch(amFilter, () => {
+    if (provinsiFilter.value !== 'all' && !provinsiList.value.includes(provinsiFilter.value)) {
+      provinsiFilter.value = 'all'
+    }
   })
 
   // Filter daftar BO pada overview view
@@ -749,7 +765,10 @@ export function useDashboardData() {
     }
 
     if (provinsiFilter.value !== 'all') {
-      result = result.filter(bo => bo.provinsi === provinsiFilter.value)
+      result = result.filter(bo =>
+        bo.provinsi === provinsiFilter.value ||
+        (Array.isArray(bo.kabupatenList) && bo.kabupatenList.some(k => k.provinsi === provinsiFilter.value))
+      )
     }
 
     if (searchQuery.value.trim()) {
