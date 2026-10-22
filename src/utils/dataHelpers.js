@@ -174,8 +174,10 @@ export function getStatusMarkasMeta(status) {
 }
 
 /**
- * Metadata & styling untuk Status Penayangan
- * Mendukung status umum: Tayang / Sudah Tayang, Belum Tayang, Proses, dll.
+ * Metadata & styling untuk Status Penayangan:
+ * - Sudah Tayang / Tayang: HIJAU
+ * - Proses: KUNING
+ * - Belum Tayang: MERAH
  */
 export function getStatusPenayanganMeta(status) {
   if (!status || typeof status !== 'string' || !status.trim() || status.trim() === '-') {
@@ -183,7 +185,7 @@ export function getStatusPenayanganMeta(status) {
       label: '-',
       isEmpty: true,
       isTayang: false,
-      isBelumTayang: true,
+      isBelumTayang: false,
       isProses: false,
       badgeClass: 'bg-slate-50 text-slate-400 border-slate-200/60',
       indicatorClass: 'bg-slate-300',
@@ -195,13 +197,13 @@ export function getStatusPenayanganMeta(status) {
   const clean = status.trim().toLowerCase()
   const rawLabel = status.trim()
 
-  // 1. Status Positif: Tayang, Sudah Tayang, Aktif, Selesai, Live
+  // 1. Status Hijau: Sudah Tayang / Tayang
   if (
-    (clean.includes('tayang') && !clean.includes('belum') && !clean.includes('tidak')) ||
-    clean.includes('sudah') ||
-    clean.includes('aktif') ||
-    clean.includes('selesai') ||
-    clean.includes('live')
+    (clean.includes('tayang') && !clean.includes('belum') && !clean.includes('tidak') && !clean.includes('proses')) ||
+    clean === 'sudah' ||
+    clean === 'aktif' ||
+    clean === 'selesai' ||
+    clean === 'live'
   ) {
     return {
       label: rawLabel,
@@ -216,9 +218,11 @@ export function getStatusPenayanganMeta(status) {
     }
   }
 
-  // 2. Status Menunggu / Proses: Proses, Draft, Review, Antrian, Scheduled
+  // 2. Status Kuning: Proses
   if (
     clean.includes('proses') ||
+    clean.includes('process') ||
+    clean.includes('progress') ||
     clean.includes('draft') ||
     clean.includes('antri') ||
     clean.includes('review') ||
@@ -230,14 +234,14 @@ export function getStatusPenayanganMeta(status) {
       isTayang: false,
       isBelumTayang: false,
       isProses: true,
-      badgeClass: 'bg-amber-50 text-amber-700 border-amber-200 ring-1 ring-amber-500/20',
+      badgeClass: 'bg-amber-50 text-amber-700 border-amber-300 ring-1 ring-amber-500/20',
       indicatorClass: 'bg-amber-500',
       textClass: 'text-amber-700',
       subtext: `Status: ${rawLabel}`
     }
   }
 
-  // 3. Status Negatif: Belum Tayang, Tidak Tayang, Nonaktif, Off
+  // 3. Status Merah: Belum Tayang
   if (
     clean.includes('belum') ||
     clean.includes('tidak') ||
@@ -250,23 +254,23 @@ export function getStatusPenayanganMeta(status) {
       isTayang: false,
       isBelumTayang: true,
       isProses: false,
-      badgeClass: 'bg-slate-100 text-slate-600 border-slate-200',
-      indicatorClass: 'bg-slate-400',
-      textClass: 'text-slate-600',
+      badgeClass: 'bg-rose-50 text-rose-700 border-rose-200 ring-1 ring-rose-500/20',
+      indicatorClass: 'bg-rose-500',
+      textClass: 'text-rose-700',
       subtext: `Status: ${rawLabel}`
     }
   }
 
-  // 4. Default format fleksibel untuk nilai teks kustom lainnya
+  // 4. Default fleksibel jika teks kustom lainnya
   return {
     label: rawLabel,
     isEmpty: false,
-    isTayang: true,
+    isTayang: false,
     isBelumTayang: false,
-    isProses: false,
-    badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-    indicatorClass: 'bg-indigo-500',
-    textClass: 'text-indigo-700',
+    isProses: true,
+    badgeClass: 'bg-amber-50 text-amber-700 border-amber-300 ring-1 ring-amber-500/20',
+    indicatorClass: 'bg-amber-500',
+    textClass: 'text-amber-700',
     subtext: `Status: ${rawLabel}`
   }
 }

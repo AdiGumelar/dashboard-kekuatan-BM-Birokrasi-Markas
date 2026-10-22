@@ -36,7 +36,7 @@ if (typeof window !== 'undefined' && !window.__dashboardPopStateInitialized) {
 const activeKabupaten = ref(null)
 const searchQuery = ref('')
 const statusMarkasFilter = ref('all') // 'all' | 'wajib' | 'tidak-wajib'
-const statusPenayanganFilter = ref('all') // 'all' | 'tayang' | 'belum'
+const statusPenayanganFilter = ref('all') // 'all' | 'tayang' | 'proses' | 'belum'
 const kedekatanFilter = ref('all') // 'all' | '1' | '2' | '3' | '4' | '5'
 const amFilter = ref('all')
 const provinsiFilter = ref('all')
@@ -612,8 +612,10 @@ export function useDashboardData() {
       const totalWajib = bo.kabupatenList.filter(k => k.statusMarkasMeta.isWajib).length
       const totalTidakWajib = bo.kabupatenList.filter(k => k.statusMarkasMeta.isTidakWajib).length
       const totalTayang = bo.kabupatenList.filter(k => k.statusPenayanganMeta.isTayang).length
-      const totalBelumTayang = bo.kabupatenList.filter(k => !k.statusPenayanganMeta.isTayang).length
+      const totalProses = bo.kabupatenList.filter(k => k.statusPenayanganMeta.isProses).length
+      const totalBelumTayang = bo.kabupatenList.filter(k => k.statusPenayanganMeta.isBelumTayang).length
       const persenTayang = total > 0 ? Math.round((totalTayang / total) * 100) : 0
+      const persenProses = total > 0 ? Math.round((totalProses / total) * 100) : 0
 
       const totalRelasiMatang = bo.kabupatenList.filter(k => k.kedekatanDinas.meta.score >= 4).length
       const persenRelasiMatang = total > 0 ? Math.round((totalRelasiMatang / total) * 100) : 0
@@ -632,8 +634,10 @@ export function useDashboardData() {
         totalWajibMarkas: totalWajib,
         totalTidakWajibMarkas: totalTidakWajib,
         totalTayang,
+        totalProses,
         totalBelumTayang,
         persenTayang,
+        persenProses,
         totalRelasiMatang,
         persenRelasiMatang,
         avgBirokrasiScore: avgScore,
@@ -827,8 +831,10 @@ export function useDashboardData() {
 
     if (statusPenayanganFilter.value === 'tayang') {
       list = list.filter(k => k.statusPenayanganMeta.isTayang)
+    } else if (statusPenayanganFilter.value === 'proses') {
+      list = list.filter(k => k.statusPenayanganMeta.isProses)
     } else if (statusPenayanganFilter.value === 'belum') {
-      list = list.filter(k => !k.statusPenayanganMeta.isTayang)
+      list = list.filter(k => k.statusPenayanganMeta.isBelumTayang)
     }
 
     if (kedekatanFilter.value !== 'all') {
@@ -864,6 +870,7 @@ export function useDashboardData() {
     let totalWajib = 0
     let totalTidakWajib = 0
     let totalTayang = 0
+    let totalProses = 0
     let totalBelumTayang = 0
     let totalRelasiMatang = 0
     let sumScore = 0
@@ -873,6 +880,7 @@ export function useDashboardData() {
       totalWajib += bo.totalWajibMarkas
       totalTidakWajib += bo.totalTidakWajibMarkas
       totalTayang += (bo.totalTayang || 0)
+      totalProses += (bo.totalProses || 0)
       totalBelumTayang += (bo.totalBelumTayang || 0)
       totalRelasiMatang += bo.totalRelasiMatang
       sumScore += (bo.avgBirokrasiScore * bo.totalKabupaten)
@@ -880,6 +888,7 @@ export function useDashboardData() {
 
     const persenRelasiMatang = totalKab > 0 ? Math.round((totalRelasiMatang / totalKab) * 100) : 0
     const persenTayang = totalKab > 0 ? Math.round((totalTayang / totalKab) * 100) : 0
+    const persenProses = totalKab > 0 ? Math.round((totalProses / totalKab) * 100) : 0
     const avgScore = totalKab > 0 ? Number((sumScore / totalKab).toFixed(1)) : 0
 
     return {
@@ -888,8 +897,10 @@ export function useDashboardData() {
       totalMarkasWajib: totalWajib,
       totalMarkasTidakWajib: totalTidakWajib,
       totalPenayanganTayang: totalTayang,
+      totalPenayanganProses: totalProses,
       totalPenayanganBelum: totalBelumTayang,
       persenPenayanganTayang: persenTayang,
+      persenPenayanganProses: persenProses,
       totalRelasiMatang,
       persenRelasiMatang,
       avgBirokrasiScore: avgScore,

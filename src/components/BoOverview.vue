@@ -78,7 +78,7 @@ const {
       <StatCard
         title="Status Penayangan"
         :value="globalStats.totalPenayanganTayang"
-        :subtitle="`${globalStats.totalPenayanganBelum} Belum Tayang`"
+        :subtitle="`${globalStats.totalPenayanganProses} Proses · ${globalStats.totalPenayanganBelum} Belum`"
         :badge-text="`${globalStats.persenPenayanganTayang}% Tayang`"
         badge-class="bg-emerald-50 text-emerald-700"
         icon-bg-class="bg-emerald-50 text-emerald-600"
@@ -200,22 +200,18 @@ const {
               </p>
             </div>
 
-            <!-- Mini Metrics Strip: Sebaran Wilayah, Markas & Penayangan -->
-            <div class="grid grid-cols-4 gap-1.5 p-2.5 bg-slate-50/80 rounded-xl border border-slate-100 mb-5">
+            <!-- Mini Metrics Strip: Sebaran Wilayah & Markas -->
+            <div class="grid grid-cols-3 gap-2 p-3 bg-slate-50/80 rounded-xl border border-slate-100 mb-5">
               <div class="text-center">
-                <span class="text-[10px] text-slate-500 block truncate">Wilayah</span>
+                <span class="text-[11px] text-slate-500 block">Total Wilayah</span>
                 <span class="text-base font-extrabold text-slate-800">{{ bo.totalKabupaten }}</span>
               </div>
-              <div class="text-center border-l border-slate-200/60">
-                <span class="text-[10px] text-rose-600 font-semibold block truncate">Wajib</span>
+              <div class="text-center border-x border-slate-200/60">
+                <span class="text-[11px] text-rose-600 font-semibold block">Wajib Markas</span>
                 <span class="text-base font-extrabold text-rose-700">{{ bo.totalWajibMarkas }}</span>
               </div>
-              <div class="text-center border-l border-slate-200/60">
-                <span class="text-[10px] text-emerald-600 font-semibold block truncate">Tayang</span>
-                <span class="text-base font-extrabold text-emerald-700">{{ bo.totalTayang }}</span>
-              </div>
-              <div class="text-center border-l border-slate-200/60">
-                <span class="text-[10px] text-slate-500 font-semibold block truncate">Tdk Wajib</span>
+              <div class="text-center">
+                <span class="text-[11px] text-slate-500 font-semibold block">Tidak Wajib</span>
                 <span class="text-base font-extrabold text-slate-700">{{ bo.totalTidakWajibMarkas }}</span>
               </div>
             </div>

@@ -75,24 +75,28 @@ const {
           </div>
 
           <!-- Quick Metrics in Hero -->
-          <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 shrink-0">
-            <div class="text-center px-2">
+          <div class="grid grid-cols-2 sm:grid-cols-6 gap-2 sm:gap-3 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 shrink-0">
+            <div class="text-center px-1.5">
               <span class="text-[11px] text-slate-300 block">Total Wilayah</span>
               <span class="text-xl font-extrabold text-white">{{ selectedBo.totalKabupaten }}</span>
             </div>
-            <div class="text-center px-2 border-l border-white/10">
+            <div class="text-center px-1.5 border-l border-white/10">
               <span class="text-[11px] text-rose-300 font-semibold block">Wajib Markas</span>
               <span class="text-xl font-extrabold text-rose-300">{{ selectedBo.totalWajibMarkas }}</span>
             </div>
-            <div class="text-center px-2 border-l border-white/10">
+            <div class="text-center px-1.5 border-l border-white/10">
               <span class="text-[11px] text-emerald-300 font-semibold block">Sudah Tayang</span>
               <span class="text-xl font-extrabold text-emerald-300">{{ selectedBo.totalTayang }}</span>
             </div>
-            <div class="text-center px-2 border-l border-white/10">
-              <span class="text-[11px] text-slate-300 font-semibold block">Tidak Wajib</span>
-              <span class="text-xl font-extrabold text-white">{{ selectedBo.totalTidakWajibMarkas }}</span>
+            <div class="text-center px-1.5 border-l border-white/10">
+              <span class="text-[11px] text-amber-300 font-semibold block">Proses</span>
+              <span class="text-xl font-extrabold text-amber-300">{{ selectedBo.totalProses || 0 }}</span>
             </div>
-            <div class="text-center px-2 border-l border-white/10">
+            <div class="text-center px-1.5 border-l border-white/10">
+              <span class="text-[11px] text-rose-300 font-semibold block">Belum Tayang</span>
+              <span class="text-xl font-extrabold text-rose-300">{{ selectedBo.totalBelumTayang || 0 }}</span>
+            </div>
+            <div class="text-center px-1.5 border-l border-white/10">
               <span class="text-[11px] text-indigo-300 block">Kekuatan Birokrasi</span>
               <span class="text-base font-extrabold text-white block mt-0.5">{{ selectedBo.avgBirokrasiScore }} / 5</span>
             </div>
@@ -136,8 +140,9 @@ const {
             class="text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:bg-white focus:outline-hidden focus:border-indigo-400 cursor-pointer"
           >
             <option value="all">Semua Penayangan</option>
-            <option value="tayang">Hanya Tayang</option>
-            <option value="belum">Hanya Belum Tayang</option>
+            <option value="tayang">Sudah Tayang</option>
+            <option value="proses">Proses</option>
+            <option value="belum">Belum Tayang</option>
           </select>
         </div>
 
