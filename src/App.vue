@@ -1,7 +1,6 @@
 <script setup>
-import { onMounted, onUnmounted } from "vue";
+import { onMounted } from "vue";
 import { useDashboardData } from "./composables/useDashboardData";
-import { SHEETS_CONFIG } from "./config/sheetsConfig";
 import Navbar from "./components/Navbar.vue";
 import BoOverview from "./components/BoOverview.vue";
 import BoDetail from "./components/BoDetail.vue";
@@ -11,19 +10,8 @@ import { Building2, Sparkles, Database, FileSpreadsheet } from "@lucide/vue";
 const { selectedBo, isLoading, loadData, isUsingMock } = useDashboardData();
 
 onMounted(() => {
-  // Langsung sinkronkan data spreadsheet setiap kali website dibuka
+  // Ambil data Google Spreadsheet hanya saat pertama kali web dibuka atau saat di-refresh
   loadData();
-
-  // Sinkronisasi otomatis berkala di latar belakang jika halaman dibiarkan terbuka
-  if (SHEETS_CONFIG.AUTO_REFRESH_INTERVAL_MS && SHEETS_CONFIG.AUTO_REFRESH_INTERVAL_MS > 0) {
-    const intervalId = setInterval(() => {
-      loadData();
-    }, SHEETS_CONFIG.AUTO_REFRESH_INTERVAL_MS);
-
-    onUnmounted(() => {
-      clearInterval(intervalId);
-    });
-  }
 });
 </script>
 

@@ -5,8 +5,9 @@
  * Dokumen: 2PACX-1vSQbpoB0pay7OlljsD-sVA9S8R4p-gGuKdBHnLQr1mhDVQj_pFBuAKePhlad6xVWhDEo9Kg5ox25dS1
  * - Sheet 1: Kekuatan Birokrasi (gid=0)
  * - Sheet 2: Markas (gid=491514176)
+ * - Sheet 3: Status Penayangan (gid=1912505094)
  * 
- * Mendukung konfigurasi Environment Variables Vercel (VITE_SPREADSHEET_1_URL & VITE_SPREADSHEET_2_URL)
+ * Mendukung konfigurasi Environment Variables Vercel (VITE_SPREADSHEET_1_URL, VITE_SPREADSHEET_2_URL, VITE_SPREADSHEET_3_URL)
  */
 
 export const SHEETS_CONFIG = {
@@ -25,6 +26,6 @@ export const SHEETS_CONFIG = {
     (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_SPREADSHEET_3_URL || import.meta.env?.VITE_SPREADSHEET_PENAYANGAN_URL)) ||
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vSQbpoB0pay7OlljsD-sVA9S8R4p-gGuKdBHnLQr1mhDVQj_pFBuAKePhlad6xVWhDEo9Kg5ox25dS1/pub?output=csv&gid=1912505094',
 
-  // Interval sinkronisasi otomatis (dalam milidetik, default: 5 menit; 0 untuk nonaktif)
-  AUTO_REFRESH_INTERVAL_MS: 5 * 60 * 1000,
+  // Interval sinkronisasi otomatis (0 untuk nonaktif; data hanya diambil saat web dibuka atau di-refresh)
+  AUTO_REFRESH_INTERVAL_MS: 0,
 }
