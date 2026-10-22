@@ -72,11 +72,13 @@ const { openKabupatenModal } = useDashboardData()
             <!-- Status Markas -->
             <td class="py-3.5 px-4">
               <span
+                v-if="!kab.statusMarkasMeta.isEmpty"
                 :class="['inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold border text-[11px]', kab.statusMarkasMeta.badgeClass]"
               >
                 <span :class="['w-1.5 h-1.5 rounded-full', kab.statusMarkasMeta.indicatorClass]"></span>
                 <span>{{ kab.statusMarkasMeta.label }}</span>
               </span>
+              <span v-else class="text-slate-300 font-mono text-xs">-</span>
             </td>
 
             <!-- Kedekatan Dinas -->

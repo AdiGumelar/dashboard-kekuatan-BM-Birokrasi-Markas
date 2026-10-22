@@ -118,13 +118,29 @@ export function getKedekatanMeta(val) {
  * Metadata & styling untuk 2 Status Markas: "Wajib" dan "Tidak Wajib"
  */
 export function getStatusMarkasMeta(status) {
-  const clean = (status || '').toString().trim().toLowerCase()
+  if (!status || typeof status !== 'string' || !status.trim() || status.trim() === '-') {
+    return {
+      label: '-',
+      isWajib: false,
+      isTidakWajib: false,
+      isEmpty: true,
+      badgeClass: 'bg-slate-50 text-slate-400 border-slate-200/60',
+      indicatorClass: 'bg-slate-300',
+      textClass: 'text-slate-400',
+      subtext: 'Tidak ada data di spreadsheet markas'
+    }
+  }
+
+  const clean = status.trim().toLowerCase()
   const isWajib = clean.includes('wajib') && !clean.includes('tidak')
+  const isTidakWajib = clean.includes('tidak')
 
   if (isWajib) {
     return {
       label: 'Wajib',
       isWajib: true,
+      isTidakWajib: false,
+      isEmpty: false,
       badgeClass: 'bg-rose-50 text-rose-700 border-rose-200 ring-1 ring-rose-500/20',
       indicatorClass: 'bg-rose-500',
       textClass: 'text-rose-700',
@@ -132,13 +148,28 @@ export function getStatusMarkasMeta(status) {
     }
   }
 
+  if (isTidakWajib) {
+    return {
+      label: 'Tidak Wajib',
+      isWajib: false,
+      isTidakWajib: true,
+      isEmpty: false,
+      badgeClass: 'bg-slate-100 text-slate-600 border-slate-200',
+      indicatorClass: 'bg-slate-400',
+      textClass: 'text-slate-600',
+      subtext: 'Status: Tidak Wajib Markas'
+    }
+  }
+
   return {
-    label: 'Tidak Wajib',
+    label: status.trim(),
     isWajib: false,
+    isTidakWajib: false,
+    isEmpty: false,
     badgeClass: 'bg-slate-100 text-slate-600 border-slate-200',
     indicatorClass: 'bg-slate-400',
     textClass: 'text-slate-600',
-    subtext: 'Status: Tidak Wajib Markas'
+    subtext: `Status: ${status.trim()}`
   }
 }
 

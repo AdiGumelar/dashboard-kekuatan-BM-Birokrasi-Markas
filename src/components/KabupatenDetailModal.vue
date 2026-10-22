@@ -88,10 +88,14 @@ onUnmounted(() => {
             </span>
             <div class="flex items-center gap-2 mb-2">
               <span
+                v-if="!activeKabupaten.statusMarkasMeta.isEmpty"
                 :class="['inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shadow-2xs', activeKabupaten.statusMarkasMeta.badgeClass]"
               >
                 <span :class="['w-2 h-2 rounded-full', activeKabupaten.statusMarkasMeta.indicatorClass]"></span>
                 <span>{{ activeKabupaten.statusMarkasMeta.label }}</span>
+              </span>
+              <span v-else class="text-slate-400 font-mono font-bold text-sm">
+                -
               </span>
             </div>
             <p class="text-xs text-slate-600 leading-relaxed">

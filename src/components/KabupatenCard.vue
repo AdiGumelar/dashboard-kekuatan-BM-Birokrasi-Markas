@@ -45,12 +45,19 @@ const { openKabupatenModal } = useDashboardData()
           <span>{{ kabupaten.kabId }}</span>
         </span>
 
-        <!-- Status Markas Badge (Wajib vs Tidak Wajib) -->
+        <!-- Status Markas Badge (Wajib vs Tidak Wajib vs Kosong) -->
         <span
+          v-if="!kabupaten.statusMarkasMeta.isEmpty"
           :class="['inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border shadow-2xs', kabupaten.statusMarkasMeta.badgeClass]"
         >
           <span :class="['w-1.5 h-1.5 rounded-full', kabupaten.statusMarkasMeta.indicatorClass]"></span>
           <span>Markas: {{ kabupaten.statusMarkasMeta.label }}</span>
+        </span>
+        <span
+          v-else
+          class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-mono text-slate-400 bg-slate-50 border border-slate-200/60"
+        >
+          Markas: -
         </span>
       </div>
 

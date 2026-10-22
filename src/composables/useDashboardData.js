@@ -71,7 +71,7 @@ export function useDashboardData() {
       const namaBo = String(row[1] || '').trim()
       const kodeKab = String(row[2] || '').trim()
       const kabupaten = String(row[3] || '').trim()
-      const statusMarkas = String(row[4] || 'Tidak Wajib').trim()
+      const statusMarkas = String(row[4] || '').trim()
 
       if (!kodeBo && !kodeKab) continue
 
@@ -81,7 +81,7 @@ export function useDashboardData() {
           namaBo,
           kodeKab,
           kabupaten,
-          statusMarkas: statusMarkas || 'Tidak Wajib'
+          statusMarkas: statusMarkas || ''
         })
       }
     }
@@ -129,10 +129,9 @@ export function useDashboardData() {
 
       if (rawKabId) processedKabIds.add(rawKabId)
 
-      // Cari padanan markas dari Sheet 2
-      const markasInfo = markasMap.get(kabId) || {
-        statusMarkas: isProvinsi ? 'Tidak Wajib' : 'Tidak Wajib'
-      }
+      // Cari padanan markas dari Sheet 2 (tetap kosong jika tidak ada di Sheet 2)
+      const markasInfo = markasMap.get(kabId) || null
+      const rawStatusMarkas = markasInfo ? markasInfo.statusMarkas : ''
 
       const dinasMeta = getKedekatanMeta(statusDinas)
       const igtkiMeta = getKedekatanMeta(igtki)
@@ -150,8 +149,8 @@ export function useDashboardData() {
         isProvinsi,
         namaBm,
         hasBm: Boolean(namaBm && namaBm !== '-' && namaBm.length > 1),
-        statusMarkas: markasInfo.statusMarkas,
-        statusMarkasMeta: getStatusMarkasMeta(markasInfo.statusMarkas),
+        statusMarkas: rawStatusMarkas,
+        statusMarkasMeta: getStatusMarkasMeta(rawStatusMarkas),
         kedekatanDinas: {
           status: statusDinas,
           jabatan: jabatanDinas,
@@ -230,7 +229,7 @@ export function useDashboardData() {
     const aggregatedBos = Array.from(boMap.values()).map(bo => {
       const total = bo.kabupatenList.length
       const totalWajib = bo.kabupatenList.filter(k => k.statusMarkasMeta.isWajib).length
-      const totalTidakWajib = total - totalWajib
+      const totalTidakWajib = bo.kabupatenList.filter(k => k.statusMarkasMeta.isTidakWajib).length
       // Relasi matang = kedekatan dinas Akrab / Relasi Baik (score 4) atau Mitra Strategis (score 5)
       const totalRelasiMatang = bo.kabupatenList.filter(k => k.kedekatanDinas.meta.score >= 4).length
       const persenRelasiMatang = total > 0 ? Math.round((totalRelasiMatang / total) * 100) : 0
@@ -282,7 +281,7 @@ export function useDashboardData() {
         namaBo: row.namabo || '',
         kodeKabupaten: String(kodeKab).trim(),
         kabupaten: row.kabupaten || '',
-        statusMarkas: row.statusmarkas || 'Tidak Wajib'
+        statusMarkas: row.statusmarkas || ''
       })
     }
 
@@ -301,9 +300,8 @@ export function useDashboardData() {
 
       if (kabId) processedKabIds.add(kabId)
 
-      const markasInfo = markasMap.get(kabId) || {
-        statusMarkas: 'Tidak Wajib'
-      }
+      const markasInfo = markasMap.get(kabId) || null
+      const rawStatusMarkas = markasInfo ? markasInfo.statusMarkas : ''
 
       const statusDinas = row.status || row.statusdinas || ''
       const jabatanDinas = row.jabatan || ''
@@ -326,8 +324,8 @@ export function useDashboardData() {
         isProvinsi: !kabId || kabupaten.toLowerCase().startsWith('provinsi'),
         namaBm: namaBm.trim(),
         hasBm: Boolean(namaBm && namaBm.trim() !== '-' && namaBm.trim().length > 1),
-        statusMarkas: markasInfo.statusMarkas,
-        statusMarkasMeta: getStatusMarkasMeta(markasInfo.statusMarkas),
+        statusMarkas: rawStatusMarkas,
+        statusMarkasMeta: getStatusMarkasMeta(rawStatusMarkas),
         kedekatanDinas: {
           status: statusDinas,
           jabatan: jabatanDinas,
@@ -365,7 +363,7 @@ export function useDashboardData() {
     const aggregatedBos = Array.from(boMap.values()).map(bo => {
       const total = bo.kabupatenList.length
       const totalWajib = bo.kabupatenList.filter(k => k.statusMarkasMeta.isWajib).length
-      const totalTidakWajib = total - totalWajib
+      const totalTidakWajib = bo.kabupatenList.filter(k => k.statusMarkasMeta.isTidakWajib).length
       const totalRelasiMatang = bo.kabupatenList.filter(k => k.kedekatanDinas.meta.score >= 4).length
       const persenRelasiMatang = total > 0 ? Math.round((totalRelasiMatang / total) * 100) : 0
 
@@ -535,7 +533,7 @@ export function useDashboardData() {
     if (statusMarkasFilter.value === 'wajib') {
       list = list.filter(k => k.statusMarkasMeta.isWajib)
     } else if (statusMarkasFilter.value === 'tidak-wajib') {
-      list = list.filter(k => !k.statusMarkasMeta.isWajib)
+      list = list.filter(k => k.statusMarkasMeta.isTidakWajib)
     }
 
     if (kedekatanFilter.value !== 'all') {
