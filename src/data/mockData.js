@@ -450,3 +450,28 @@ export const MOCK_SHEET_2_MARKAS = [
   }
 ]
 
+
+
+export const MOCK_SHEET_3_PENAYANGAN = [
+  { 'Kode BO': 'BO-SBY', 'Nama BO': 'BO Surabaya Raya', 'Kode Kabupaten': '3578', Kabupaten: 'Kota Surabaya', 'Status Markas': 'Sudah Tayang', 'Terakhir Diupdate': '2026-10-20 14:00' },
+  { 'Kode BO': 'BO-SBY', 'Nama BO': 'BO Surabaya Raya', 'Kode Kabupaten': '3515', Kabupaten: 'Kabupaten Sidoarjo', 'Status Markas': 'Sudah Tayang', 'Terakhir Diupdate': '2026-10-21 09:30' },
+  { 'Kode BO': 'BO-SBY', 'Nama BO': 'BO Surabaya Raya', 'Kode Kabupaten': '3525', Kabupaten: 'Kabupaten Gresik', 'Status Markas': 'Belum Tayang', 'Terakhir Diupdate': '2026-10-18 11:20' },
+  { 'Kode BO': 'BO-SBY', 'Nama BO': 'BO Surabaya Raya', 'Kode Kabupaten': '3516', Kabupaten: 'Kabupaten Mojokerto', 'Status Markas': 'Proses', 'Terakhir Diupdate': '2026-10-22 08:15' },
+  { 'Kode BO': 'BO-MLG', 'Nama BO': 'BO Malang Raya', 'Kode Kabupaten': '3573', Kabupaten: 'Kota Malang', 'Status Markas': 'Sudah Tayang', 'Terakhir Diupdate': '2026-10-21 16:45' },
+  { 'Kode BO': 'BO-MLG', 'Nama BO': 'BO Malang Raya', 'Kode Kabupaten': '3507', Kabupaten: 'Kabupaten Malang', 'Status Markas': 'Sudah Tayang', 'Terakhir Diupdate': '2026-10-19 10:10' },
+  { 'Kode BO': 'BO-MLG', 'Nama BO': 'BO Malang Raya', 'Kode Kabupaten': '3579', Kabupaten: 'Kota Batu', 'Status Markas': 'Belum Tayang', 'Terakhir Diupdate': '2026-10-15 13:00' },
+  { 'Kode BO': 'BO-MLG', 'Nama BO': 'BO Malang Raya', 'Kode Kabupaten': '3514', Kabupaten: 'Kabupaten Pasuruan', 'Status Markas': 'Belum Tayang', 'Terakhir Diupdate': '2026-10-17 15:30' },
+  { 'Kode BO': 'BO-KDR', 'Nama BO': 'BO Kediri - Madiun', 'Kode Kabupaten': '3571', Kabupaten: 'Kota Kediri', 'Status Markas': 'Sudah Tayang', 'Terakhir Diupdate': '2026-10-22 07:00' },
+  { 'Kode BO': 'BO-KDR', 'Nama BO': 'BO Kediri - Madiun', 'Kode Kabupaten': '3506', Kabupaten: 'Kabupaten Kediri', 'Status Markas': 'Proses', 'Terakhir Diupdate': '2026-10-21 17:20' },
+  { 'Kode BO': 'BO-KDR', 'Nama BO': 'BO Kediri - Madiun', 'Kode Kabupaten': '3577', Kabupaten: 'Kota Madiun', 'Status Markas': 'Sudah Tayang', 'Terakhir Diupdate': '2026-10-20 12:00' },
+  { 'Kode BO': 'BO-KDR', 'Nama BO': 'BO Kediri - Madiun', 'Kode Kabupaten': '3519', Kabupaten: 'Kabupaten Madiun', 'Status Markas': 'Belum Tayang', 'Terakhir Diupdate': '2026-10-19 14:15' },
+  { 'Kode BO': 'BO-KDR', 'Nama BO': 'BO Kediri - Madiun', 'Kode Kabupaten': '3518', Kabupaten: 'Kabupaten Nganjuk', 'Status Markas': 'Belum Tayang', 'Terakhir Diupdate': '2026-10-18 09:00' },
+  { 'Kode BO': 'BO-JBR', 'Nama BO': 'BO Tapal Kuda', 'Kode Kabupaten': '3509', Kabupaten: 'Kabupaten Jember', 'Status Markas': 'Sudah Tayang', 'Terakhir Diupdate': '2026-10-21 11:00' },
+  { 'Kode BO': 'BO-JBR', 'Nama BO': 'BO Tapal Kuda', 'Kode Kabupaten': '3510', Kabupaten: 'Kabupaten Banyuwangi', 'Status Markas': 'Sudah Tayang', 'Terakhir Diupdate': '2026-10-20 15:30' },
+  { 'Kode BO': 'BO-JBR', 'Nama BO': 'BO Tapal Kuda', 'Kode Kabupaten': '3511', Kabupaten: 'Kabupaten Bondowoso', 'Status Markas': 'Belum Tayang', 'Terakhir Diupdate': '2026-10-16 10:00' },
+  { 'Kode BO': 'BO-JBR', 'Nama BO': 'BO Tapal Kuda', 'Kode Kabupaten': '3512', Kabupaten: 'Kabupaten Situbondo', 'Status Markas': 'Belum Tayang', 'Terakhir Diupdate': '2026-10-17 08:30' },
+  { 'Kode BO': 'BO-SOC', 'Nama BO': 'BO Solo Raya & DIY', 'Kode Kabupaten': '3372', Kabupaten: 'Kota Surakarta', 'Status Markas': 'Sudah Tayang', 'Terakhir Diupdate': '2026-10-21 13:40' },
+  { 'Kode BO': 'BO-SOC', 'Nama BO': 'BO Solo Raya & DIY', 'Kode Kabupaten': '3471', Kabupaten: 'Kota Yogyakarta', 'Status Markas': 'Sudah Tayang', 'Terakhir Diupdate': '2026-10-22 06:50' },
+  { 'Kode BO': 'BO-SOC', 'Nama BO': 'BO Solo Raya & DIY', 'Kode Kabupaten': '3310', Kabupaten: 'Kabupaten Klaten', 'Status Markas': 'Proses', 'Terakhir Diupdate': '2026-10-20 16:10' },
+  { 'Kode BO': 'BO-SOC', 'Nama BO': 'BO Solo Raya & DIY', 'Kode Kabupaten': '3311', Kabupaten: 'Kabupaten Sukoharjo', 'Status Markas': 'Belum Tayang', 'Terakhir Diupdate': '2026-10-19 11:25' }
+]

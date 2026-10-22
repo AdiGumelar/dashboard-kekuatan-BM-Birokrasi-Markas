@@ -10,7 +10,8 @@ import {
   Award,
   ShieldAlert,
   ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
+  Tv
 } from '@lucide/vue'
 import { useDashboardData } from '../composables/useDashboardData'
 
@@ -79,45 +80,71 @@ onUnmounted(() => {
 
       <!-- Modal Body -->
       <div class="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
-        <!-- 1. Status Markas & Kepemimpinan Cabang -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- 1. Status Markas, Status Penayangan & Kepemimpinan Cabang -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <!-- Status Markas Card -->
-          <div class="p-4 rounded-2xl border bg-slate-50/70 border-slate-200">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
-              Status Markas
-            </span>
-            <div class="flex items-center gap-2 mb-2">
-              <span
-                v-if="!activeKabupaten.statusMarkasMeta.isEmpty"
-                :class="['inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shadow-2xs', activeKabupaten.statusMarkasMeta.badgeClass]"
-              >
-                <span :class="['w-2 h-2 rounded-full', activeKabupaten.statusMarkasMeta.indicatorClass]"></span>
-                <span>{{ activeKabupaten.statusMarkasMeta.label }}</span>
+          <div class="p-4 rounded-2xl border bg-slate-50/70 border-slate-200 flex flex-col justify-between">
+            <div>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+                Status Markas
               </span>
-              <span v-else class="text-slate-400 font-mono font-bold text-sm">
-                -
-              </span>
+              <div class="flex items-center gap-2 mb-2">
+                <span
+                  v-if="!activeKabupaten.statusMarkasMeta.isEmpty"
+                  :class="['inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border shadow-2xs', activeKabupaten.statusMarkasMeta.badgeClass]"
+                >
+                  <span :class="['w-2 h-2 rounded-full', activeKabupaten.statusMarkasMeta.indicatorClass]"></span>
+                  <span>{{ activeKabupaten.statusMarkasMeta.label }}</span>
+                </span>
+                <span v-else class="text-slate-400 font-mono font-bold text-sm">
+                  -
+                </span>
+              </div>
             </div>
-            <p class="text-xs text-slate-600 leading-relaxed">
+            <p class="text-xs text-slate-500 leading-relaxed mt-1">
               {{ activeKabupaten.statusMarkasMeta.subtext }}
             </p>
           </div>
 
+          <!-- Status Penayangan Card -->
+          <div class="p-4 rounded-2xl border bg-slate-50/70 border-slate-200 flex flex-col justify-between">
+            <div>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+                Status Penayangan
+              </span>
+              <div class="flex items-center gap-2 mb-2">
+                <span
+                  v-if="!activeKabupaten.statusPenayanganMeta.isEmpty"
+                  :class="['inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border shadow-2xs', activeKabupaten.statusPenayanganMeta.badgeClass]"
+                >
+                  <span :class="['w-2 h-2 rounded-full', activeKabupaten.statusPenayanganMeta.indicatorClass]"></span>
+                  <span>{{ activeKabupaten.statusPenayanganMeta.label }}</span>
+                </span>
+                <span v-else class="text-slate-400 font-mono font-bold text-sm">
+                  -
+                </span>
+              </div>
+            </div>
+            <p class="text-xs text-slate-500 leading-relaxed mt-1">
+              {{ activeKabupaten.penayanganTerakhirDiupdate ? `Diupdate: ${activeKabupaten.penayanganTerakhirDiupdate}` : activeKabupaten.statusPenayanganMeta.subtext }}
+            </p>
+          </div>
+
           <!-- Kepemimpinan Cabang Card -->
-          <div class="p-4 rounded-2xl border bg-slate-50/70 border-slate-200">
+          <div class="p-4 rounded-2xl border bg-slate-50/70 border-slate-200 flex flex-col justify-between">
             <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
-              Branch Manager (Kepala BO)
+              Branch Manager
             </span>
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
-                <User class="w-5 h-5" />
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
+                <User class="w-4 h-4" />
               </div>
               <div class="min-w-0">
-                <span class="text-sm font-bold text-slate-900 block truncate">
+                <span class="text-xs font-bold text-slate-900 block truncate" :title="selectedBo?.namaBm || activeKabupaten.namaBm || '-'">
                   {{ selectedBo?.namaBm || activeKabupaten.namaBm || '-' }}
                 </span>
-                <span class="text-[11px] text-slate-500 block">
-                  Kepala Cabang {{ selectedBo?.namaBo || '' }}
+                <span class="text-[10px] text-slate-500 block truncate">
+                  Kepala {{ selectedBo?.namaBo || 'BO' }}
                 </span>
               </div>
             </div>
@@ -276,4 +303,3 @@ onUnmounted(() => {
     </div>
   </div>
 </template>
-

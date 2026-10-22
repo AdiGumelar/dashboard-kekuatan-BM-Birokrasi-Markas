@@ -1,10 +1,11 @@
 import { ref, computed } from 'vue'
 import Papa from 'papaparse'
 import { SHEETS_CONFIG } from '../config/sheetsConfig.js'
-import { MOCK_SHEET_1_BM_BIROKRASI, MOCK_SHEET_2_MARKAS } from '../data/mockData.js'
+import { MOCK_SHEET_1_BM_BIROKRASI, MOCK_SHEET_2_MARKAS, MOCK_SHEET_3_PENAYANGAN } from '../data/mockData.js'
 import {
   getKedekatanMeta,
   getStatusMarkasMeta,
+  getStatusPenayanganMeta,
   normalizeRow,
   normalizeRegionName
 } from '../utils/dataHelpers.js'
@@ -51,7 +52,7 @@ export function useDashboardData() {
   /**
    * Parser khusus untuk format array mentah (CSV multi-tier header)
    */
-  function parseSheetDataFromArrays(sheet1RawRows, sheet2RawRows) {
+  function parseSheetDataFromArrays(sheet1RawRows, sheet2RawRows, sheet3RawRows = []) {
     // 1. Ekstraksi Sheet 2 (Markas)
     const markasMap = new Map() // key: kodeKab
     const markasProvMap = new Map() // key: `${kodeBo}_${norm}` & `${kodeBo}_PROV`
@@ -97,6 +98,62 @@ export function useDashboardData() {
         if (!kodeKab || kabupaten.toLowerCase().startsWith('provinsi')) {
           markasProvMap.set(`${kodeBo}_${norm}`, entry)
           markasProvMap.set(`${kodeBo}_PROV`, entry)
+        }
+      }
+    }
+
+    // 1b. Ekstraksi Sheet 3 (Status Penayangan)
+    // Kolom: Kode BO | Nama BO | Kode Kabupaten | Kabupaten | Status Markas (Penayangan) | Terakhir Diupdate
+    const penayanganBoKabMap = new Map() // key: `${kodeBo}_${kodeKab}`
+    const penayanganKabMap = new Map()   // key: kodeKab
+    const penayanganBoNameMap = new Map() // key: `${kodeBo}_${norm}`
+    const penayanganNameMap = new Map() // key: norm
+    let s3HeaderFound = false
+
+    if (Array.isArray(sheet3RawRows) && sheet3RawRows.length > 0) {
+      for (const row of sheet3RawRows) {
+        if (!Array.isArray(row) || row.length === 0) continue
+
+        if (!s3HeaderFound) {
+          const col0 = String(row[0] || '').trim().toLowerCase()
+          const col2 = String(row[2] || '').trim().toLowerCase()
+          const col4 = String(row[4] || '').trim().toLowerCase()
+          if (col0.includes('kode bo') || col2.includes('kode kabupaten') || col4.includes('status')) {
+            s3HeaderFound = true
+          }
+          continue
+        }
+
+        const kodeBo = String(row[0] || '').trim().toUpperCase()
+        const namaBo = String(row[1] || '').trim()
+        const kodeKab = String(row[2] || '').trim()
+        const kabupaten = String(row[3] || '').trim()
+        const statusPenayangan = String(row[4] || '').trim()
+        const terakhirDiupdate = String(row[5] || '').trim()
+
+        if (!kodeBo && !kodeKab && !kabupaten && !statusPenayangan) continue
+
+        const entry = {
+          kodeBo,
+          namaBo,
+          kodeKab,
+          kabupaten,
+          statusPenayangan: statusPenayangan || '',
+          terakhirDiupdate: terakhirDiupdate || ''
+        }
+
+        if (kodeBo && kodeKab) {
+          penayanganBoKabMap.set(`${kodeBo}_${kodeKab}`, entry)
+        }
+        if (kodeKab) {
+          penayanganKabMap.set(kodeKab, entry)
+        }
+        if (kabupaten) {
+          const norm = normalizeRegionName(kabupaten)
+          if (kodeBo) {
+            penayanganBoNameMap.set(`${kodeBo}_${norm}`, entry)
+          }
+          penayanganNameMap.set(norm, entry)
         }
       }
     }
@@ -166,6 +223,27 @@ export function useDashboardData() {
 
       const rawStatusMarkas = markasInfo ? markasInfo.statusMarkas : ''
 
+      // Cari padanan status penayangan dari Sheet 3
+      let penayanganInfo = null
+      if (rawKabId) {
+        if (kodeBo && penayanganBoKabMap.has(`${kodeBo}_${rawKabId}`)) {
+          penayanganInfo = penayanganBoKabMap.get(`${kodeBo}_${rawKabId}`)
+        } else if (penayanganKabMap.has(rawKabId)) {
+          penayanganInfo = penayanganKabMap.get(rawKabId)
+        }
+      }
+      if (!penayanganInfo && (kabupaten || provinsi)) {
+        const norm = normalizeRegionName(kabupaten || provinsi)
+        if (kodeBo && penayanganBoNameMap.has(`${kodeBo}_${norm}`)) {
+          penayanganInfo = penayanganBoNameMap.get(`${kodeBo}_${norm}`)
+        } else if (penayanganNameMap.has(norm)) {
+          penayanganInfo = penayanganNameMap.get(norm)
+        }
+      }
+
+      const rawStatusPenayangan = penayanganInfo ? penayanganInfo.statusPenayangan : ''
+      const rawTerakhirDiupdate = penayanganInfo ? penayanganInfo.terakhirDiupdate : ''
+
       const dinasMeta = getKedekatanMeta(statusDinas)
       const igtkiMeta = getKedekatanMeta(igtki)
       const k3sMeta = getKedekatanMeta(k3s)
@@ -184,6 +262,9 @@ export function useDashboardData() {
         hasBm: Boolean(namaBm && namaBm !== '-' && namaBm.length > 1),
         statusMarkas: rawStatusMarkas,
         statusMarkasMeta: getStatusMarkasMeta(rawStatusMarkas),
+        statusPenayangan: rawStatusPenayangan,
+        statusPenayanganMeta: getStatusPenayanganMeta(rawStatusPenayangan),
+        penayanganTerakhirDiupdate: rawTerakhirDiupdate,
         kedekatanDinas: {
           status: statusDinas,
           jabatan: jabatanDinas,
@@ -222,6 +303,7 @@ export function useDashboardData() {
       if (!processedMarkasEntries.has(markasItem) && (!markasItem.kodeKab || !processedKabIds.has(markasItem.kodeKab))) {
         const kodeBo = (markasItem.kodeBo || 'BO-UNKNOWN').trim().toUpperCase()
         const namaBo = markasItem.namaBo || kodeBo
+        const kodeKab = markasItem.kodeKab
 
         if (!boMap.has(kodeBo)) {
           boMap.set(kodeBo, {
@@ -233,6 +315,27 @@ export function useDashboardData() {
           })
         }
 
+        // Cari padanan status penayangan untuk entri outer join
+        let penayanganInfo = null
+        if (kodeKab) {
+          if (kodeBo && penayanganBoKabMap.has(`${kodeBo}_${kodeKab}`)) {
+            penayanganInfo = penayanganBoKabMap.get(`${kodeBo}_${kodeKab}`)
+          } else if (penayanganKabMap.has(kodeKab)) {
+            penayanganInfo = penayanganKabMap.get(kodeKab)
+          }
+        }
+        if (!penayanganInfo && markasItem.kabupaten) {
+          const norm = normalizeRegionName(markasItem.kabupaten)
+          if (kodeBo && penayanganBoNameMap.has(`${kodeBo}_${norm}`)) {
+            penayanganInfo = penayanganBoNameMap.get(`${kodeBo}_${norm}`)
+          } else if (penayanganNameMap.has(norm)) {
+            penayanganInfo = penayanganNameMap.get(norm)
+          }
+        }
+
+        const rawStatusPenayangan = penayanganInfo ? penayanganInfo.statusPenayangan : ''
+        const rawTerakhirDiupdate = penayanganInfo ? penayanganInfo.terakhirDiupdate : ''
+
         const boEntry = boMap.get(kodeBo)
         boEntry.kabupatenList.push({
           kabId: kodeKab,
@@ -243,6 +346,9 @@ export function useDashboardData() {
           hasBm: false,
           statusMarkas: markasItem.statusMarkas,
           statusMarkasMeta: getStatusMarkasMeta(markasItem.statusMarkas),
+          statusPenayangan: rawStatusPenayangan,
+          statusPenayanganMeta: getStatusPenayanganMeta(rawStatusPenayangan),
+          penayanganTerakhirDiupdate: rawTerakhirDiupdate,
           kedekatanDinas: {
             status: '',
             jabatan: '',
@@ -294,11 +400,11 @@ export function useDashboardData() {
   }
 
   /**
-   * Menggabungkan raw data dari Sheet 1 & Sheet 2 (dukungan format objek bawaan)
+   * Menggabungkan raw data dari Sheet 1, Sheet 2, & Sheet 3 (dukungan format objek)
    */
-  function processAndMergeData(sheet1Rows, sheet2Rows) {
+  function processAndMergeData(sheet1Rows, sheet2Rows, sheet3Rows = []) {
     if (Array.isArray(sheet1Rows) && Array.isArray(sheet1Rows[0])) {
-      parseSheetDataFromArrays(sheet1Rows, sheet2Rows)
+      parseSheetDataFromArrays(sheet1Rows, sheet2Rows, sheet3Rows)
       return
     }
 
@@ -337,6 +443,49 @@ export function useDashboardData() {
       }
     }
 
+    // Ekstraksi Sheet 3 (Status Penayangan) dari objek
+    const penayanganBoKabMap = new Map()
+    const penayanganKabMap = new Map()
+    const penayanganBoNameMap = new Map()
+    const penayanganNameMap = new Map()
+
+    if (Array.isArray(sheet3Rows)) {
+      for (const raw of sheet3Rows) {
+        const row = normalizeRow(raw)
+        const kodeBo = String(row.kodebo || '').trim().toUpperCase()
+        const namaBo = row.namabo || ''
+        const kodeKab = String(row.kodekabupaten || row.kabid || row.id || '').trim()
+        const kabupaten = String(row.kabupaten || '').trim()
+        const statusPenayangan = String(row.statuspenayangan || row.statusmarkas || row.status || '').trim()
+        const terakhirDiupdate = String(row.terakhirdiupdate || row.terakhirupdate || row.updatedat || '').trim()
+
+        if (!kodeBo && !kodeKab && !kabupaten && !statusPenayangan) continue
+
+        const entry = {
+          kodeBo,
+          namaBo,
+          kodeKab,
+          kabupaten,
+          statusPenayangan,
+          terakhirDiupdate
+        }
+
+        if (kodeBo && kodeKab) {
+          penayanganBoKabMap.set(`${kodeBo}_${kodeKab}`, entry)
+        }
+        if (kodeKab) {
+          penayanganKabMap.set(kodeKab, entry)
+        }
+        if (kabupaten) {
+          const norm = normalizeRegionName(kabupaten)
+          if (kodeBo) {
+            penayanganBoNameMap.set(`${kodeBo}_${norm}`, entry)
+          }
+          penayanganNameMap.set(norm, entry)
+        }
+      }
+    }
+
     const boMap = new Map()
     const processedKabIds = new Set()
 
@@ -369,6 +518,26 @@ export function useDashboardData() {
 
       const rawStatusMarkas = markasInfo ? markasInfo.statusMarkas : ''
 
+      let penayanganInfo = null
+      if (kabId) {
+        if (kodeBo && penayanganBoKabMap.has(`${kodeBo}_${kabId}`)) {
+          penayanganInfo = penayanganBoKabMap.get(`${kodeBo}_${kabId}`)
+        } else if (penayanganKabMap.has(kabId)) {
+          penayanganInfo = penayanganKabMap.get(kabId)
+        }
+      }
+      if (!penayanganInfo && (kabupaten || provinsi)) {
+        const norm = normalizeRegionName(kabupaten || provinsi)
+        if (kodeBo && penayanganBoNameMap.has(`${kodeBo}_${norm}`)) {
+          penayanganInfo = penayanganBoNameMap.get(`${kodeBo}_${norm}`)
+        } else if (penayanganNameMap.has(norm)) {
+          penayanganInfo = penayanganNameMap.get(norm)
+        }
+      }
+
+      const rawStatusPenayangan = penayanganInfo ? penayanganInfo.statusPenayangan : ''
+      const rawTerakhirDiupdate = penayanganInfo ? penayanganInfo.terakhirDiupdate : ''
+
       const statusDinas = row.status || row.statusdinas || ''
       const jabatanDinas = row.jabatan || ''
       const statusIgtki = row.igtki || ''
@@ -392,6 +561,9 @@ export function useDashboardData() {
         hasBm: Boolean(namaBm && namaBm.trim() !== '-' && namaBm.trim().length > 1),
         statusMarkas: rawStatusMarkas,
         statusMarkasMeta: getStatusMarkasMeta(rawStatusMarkas),
+        statusPenayangan: rawStatusPenayangan,
+        statusPenayanganMeta: getStatusPenayanganMeta(rawStatusPenayangan),
+        penayanganTerakhirDiupdate: rawTerakhirDiupdate,
         kedekatanDinas: {
           status: statusDinas,
           jabatan: jabatanDinas,
@@ -466,9 +638,10 @@ export function useDashboardData() {
 
     const url1 = SHEETS_CONFIG.SPREADSHEET_1_BM_BIROKRASI_CSV_URL?.trim()
     const url2 = SHEETS_CONFIG.SPREADSHEET_2_MARKAS_CSV_URL?.trim()
+    const url3 = SHEETS_CONFIG.SPREADSHEET_3_PENAYANGAN_CSV_URL?.trim()
 
     if (!url1 || !url2) {
-      processAndMergeData(MOCK_SHEET_1_BM_BIROKRASI, MOCK_SHEET_2_MARKAS)
+      processAndMergeData(MOCK_SHEET_1_BM_BIROKRASI, MOCK_SHEET_2_MARKAS, MOCK_SHEET_3_PENAYANGAN)
       isUsingMock.value = true
       lastSyncTime.value = new Date()
       isLoading.value = false
@@ -477,36 +650,50 @@ export function useDashboardData() {
 
     try {
       // Parameter cache-buster (_t) dan cache: 'no-cache' memastikan data langsung tersinkronkan segar dari Google Sheets setiap kali website dibuka
-      const cacheBuster = '_t=' + Date.now();
-      const fetchUrl1 = url1.includes('?') ? (url1 + '&' + cacheBuster) : (url1 + '?' + cacheBuster);
-      const fetchUrl2 = url2.includes('?') ? (url2 + '&' + cacheBuster) : (url2 + '?' + cacheBuster);
+      const cacheBuster = '_t=' + Date.now()
+      const fetchUrl1 = url1.includes('?') ? (url1 + '&' + cacheBuster) : (url1 + '?' + cacheBuster)
+      const fetchUrl2 = url2.includes('?') ? (url2 + '&' + cacheBuster) : (url2 + '?' + cacheBuster)
+      const fetchUrl3 = url3 ? (url3.includes('?') ? (url3 + '&' + cacheBuster) : (url3 + '?' + cacheBuster)) : null
 
-      const [res1, res2] = await Promise.all([
+      const fetchPromises = [
         fetch(fetchUrl1, { cache: 'no-cache' }),
         fetch(fetchUrl2, { cache: 'no-cache' })
-      ])
+      ]
+
+      if (fetchUrl3) {
+        fetchPromises.push(
+          fetch(fetchUrl3, { cache: 'no-cache' }).catch(err => {
+            console.warn('Gagal memuat Sheet 3 Status Penayangan:', err)
+            return null
+          })
+        )
+      }
+
+      const [res1, res2, res3] = await Promise.all(fetchPromises)
 
       if (!res1.ok) throw new Error(`Gagal mengunduh Sheet 1: HTTP ${res1.status}`)
       if (!res2.ok) throw new Error(`Gagal mengunduh Sheet 2: HTTP ${res2.status}`)
 
       const text1 = await res1.text()
       const text2 = await res2.text()
+      const text3 = res3 && res3.ok ? await res3.text() : ''
 
       // Parse sebagai 2D array mentah agar aman untuk multi-tier headers
       const parsed1 = Papa.parse(text1, { skipEmptyLines: true })
       const parsed2 = Papa.parse(text2, { skipEmptyLines: true })
+      const parsed3 = text3 ? Papa.parse(text3, { skipEmptyLines: true }) : { data: [] }
 
       if (parsed1.data.length === 0 || parsed2.data.length === 0) {
         throw new Error('Data spreadsheet kosong')
       }
 
-      parseSheetDataFromArrays(parsed1.data, parsed2.data)
+      parseSheetDataFromArrays(parsed1.data, parsed2.data, parsed3.data)
       isUsingMock.value = false
       lastSyncTime.value = new Date()
     } catch (err) {
       console.error('Error fetching Google Sheets data:', err)
       errorMessage.value = `Gagal sinkronisasi data online (${err.message}). Menampilkan data cadangan.`
-      processAndMergeData(MOCK_SHEET_1_BM_BIROKRASI, MOCK_SHEET_2_MARKAS)
+      processAndMergeData(MOCK_SHEET_1_BM_BIROKRASI, MOCK_SHEET_2_MARKAS, MOCK_SHEET_3_PENAYANGAN)
       isUsingMock.value = true
       lastSyncTime.value = new Date()
     } finally {
@@ -561,7 +748,8 @@ export function useDashboardData() {
         const matchKab = bo.kabupatenList.some(k =>
           k.kabupaten.toLowerCase().includes(q) ||
           k.namaBm.toLowerCase().includes(q) ||
-          k.kabId.toLowerCase().includes(q)
+          k.kabId.toLowerCase().includes(q) ||
+          (k.statusPenayangan && k.statusPenayangan.toLowerCase().includes(q))
         )
         return matchBo || matchKab
       })
@@ -620,6 +808,7 @@ export function useDashboardData() {
         k.kabupaten.toLowerCase().includes(q) ||
         k.namaBm.toLowerCase().includes(q) ||
         k.kabId.toLowerCase().includes(q) ||
+        (k.statusPenayangan && k.statusPenayangan.toLowerCase().includes(q)) ||
         k.kedekatanDinas.jabatan.toLowerCase().includes(q)
       )
     }

@@ -29,6 +29,7 @@ const { openKabupatenModal } = useDashboardData()
             <th class="py-3.5 px-4">Kode & Kabupaten</th>
             <th class="py-3.5 px-4">Nama BM</th>
             <th class="py-3.5 px-4">Status Markas</th>
+            <th class="py-3.5 px-4">Status Penayangan</th>
             <th class="py-3.5 px-4">Kedekatan Dinas (Jabatan)</th>
             <th class="py-3.5 px-3 text-center">IGTKI</th>
             <th class="py-3.5 px-3 text-center">K3S</th>
@@ -79,6 +80,28 @@ const { openKabupatenModal } = useDashboardData()
                 <span>{{ kab.statusMarkasMeta.label }}</span>
               </span>
               <span v-else class="text-slate-300 font-mono text-xs">-</span>
+            </td>
+
+            <!-- Status Penayangan -->
+            <td class="py-3.5 px-4">
+              <div class="space-y-0.5">
+                <span
+                  v-if="!kab.statusPenayanganMeta.isEmpty"
+                  :class="['inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold border text-[11px]', kab.statusPenayanganMeta.badgeClass]"
+                  :title="kab.penayanganTerakhirDiupdate ? `Terakhir Diupdate: ${kab.penayanganTerakhirDiupdate}` : ''"
+                >
+                  <span :class="['w-1.5 h-1.5 rounded-full', kab.statusPenayanganMeta.indicatorClass]"></span>
+                  <span>{{ kab.statusPenayanganMeta.label }}</span>
+                </span>
+                <span v-else class="text-slate-300 font-mono text-xs">-</span>
+                <div
+                  v-if="kab.penayanganTerakhirDiupdate"
+                  class="text-[10px] text-slate-400 font-mono"
+                  :title="`Terakhir Diupdate: ${kab.penayanganTerakhirDiupdate}`"
+                >
+                  {{ kab.penayanganTerakhirDiupdate }}
+                </div>
+              </div>
             </td>
 
             <!-- Kedekatan Dinas -->
@@ -153,4 +176,3 @@ const { openKabupatenModal } = useDashboardData()
     </div>
   </div>
 </template>
-

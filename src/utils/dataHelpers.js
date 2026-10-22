@@ -174,6 +174,89 @@ export function getStatusMarkasMeta(status) {
 }
 
 /**
+ * Metadata & styling untuk Status Penayangan
+ * Mendukung status umum: Tayang / Sudah Tayang, Belum Tayang, Proses, dll.
+ */
+export function getStatusPenayanganMeta(status) {
+  if (!status || typeof status !== 'string' || !status.trim() || status.trim() === '-') {
+    return {
+      label: '-',
+      isEmpty: true,
+      badgeClass: 'bg-slate-50 text-slate-400 border-slate-200/60',
+      indicatorClass: 'bg-slate-300',
+      textClass: 'text-slate-400',
+      subtext: 'Belum ada data penayangan'
+    }
+  }
+
+  const clean = status.trim().toLowerCase()
+  const rawLabel = status.trim()
+
+  // 1. Status Positif: Tayang, Sudah Tayang, Aktif, Selesai, Live
+  if (
+    (clean.includes('tayang') && !clean.includes('belum') && !clean.includes('tidak')) ||
+    clean.includes('sudah') ||
+    clean.includes('aktif') ||
+    clean.includes('selesai') ||
+    clean.includes('live')
+  ) {
+    return {
+      label: rawLabel,
+      isEmpty: false,
+      badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-1 ring-emerald-500/20',
+      indicatorClass: 'bg-emerald-500',
+      textClass: 'text-emerald-700',
+      subtext: `Status: ${rawLabel}`
+    }
+  }
+
+  // 2. Status Menunggu / Proses: Proses, Draft, Review, Antrian, Scheduled
+  if (
+    clean.includes('proses') ||
+    clean.includes('draft') ||
+    clean.includes('antri') ||
+    clean.includes('review') ||
+    clean.includes('jadwal')
+  ) {
+    return {
+      label: rawLabel,
+      isEmpty: false,
+      badgeClass: 'bg-amber-50 text-amber-700 border-amber-200 ring-1 ring-amber-500/20',
+      indicatorClass: 'bg-amber-500',
+      textClass: 'text-amber-700',
+      subtext: `Status: ${rawLabel}`
+    }
+  }
+
+  // 3. Status Negatif: Belum Tayang, Tidak Tayang, Nonaktif, Off
+  if (
+    clean.includes('belum') ||
+    clean.includes('tidak') ||
+    clean.includes('non') ||
+    clean.includes('off')
+  ) {
+    return {
+      label: rawLabel,
+      isEmpty: false,
+      badgeClass: 'bg-slate-100 text-slate-600 border-slate-200',
+      indicatorClass: 'bg-slate-400',
+      textClass: 'text-slate-600',
+      subtext: `Status: ${rawLabel}`
+    }
+  }
+
+  // 4. Default format fleksibel untuk nilai teks kustom lainnya
+  return {
+    label: rawLabel,
+    isEmpty: false,
+    badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    indicatorClass: 'bg-indigo-500',
+    textClass: 'text-indigo-700',
+    subtext: `Status: ${rawLabel}`
+  }
+}
+
+/**
  * Normalisasi objek baris CSV untuk menangani variasi penamaan kolom
  */
 export function normalizeRow(row) {
@@ -199,7 +282,6 @@ export function formatDateTime(date) {
     minute: '2-digit'
   }).format(new Date(date))
 }
-
 
 /**
  * Normalisasi nama wilayah (Provinsi/Kabupaten/Kota) untuk pencocokan toleran variasi ejaan

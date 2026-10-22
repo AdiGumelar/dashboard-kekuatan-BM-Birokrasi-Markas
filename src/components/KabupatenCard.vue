@@ -28,7 +28,7 @@ const { openKabupatenModal } = useDashboardData()
     class="bg-white rounded-2xl border border-slate-200/90 hover:border-indigo-300 p-5 shadow-xs hover:shadow-lg transition-all duration-200 flex flex-col justify-between group cursor-pointer relative"
   >
     <div>
-      <!-- Top Row: Kab ID & Status Markas -->
+      <!-- Top Row: Kab ID & Status Badges -->
       <div class="flex items-center justify-between gap-2 mb-3">
         <span
           v-if="kabupaten.isProvinsi"
@@ -45,20 +45,33 @@ const { openKabupatenModal } = useDashboardData()
           <span>{{ kabupaten.kabId }}</span>
         </span>
 
-        <!-- Status Markas Badge (Wajib vs Tidak Wajib vs Kosong) -->
-        <span
-          v-if="!kabupaten.statusMarkasMeta.isEmpty"
-          :class="['inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border shadow-2xs', kabupaten.statusMarkasMeta.badgeClass]"
-        >
-          <span :class="['w-1.5 h-1.5 rounded-full', kabupaten.statusMarkasMeta.indicatorClass]"></span>
-          <span>Markas: {{ kabupaten.statusMarkasMeta.label }}</span>
-        </span>
-        <span
-          v-else
-          class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-mono text-slate-400 bg-slate-50 border border-slate-200/60"
-        >
-          Markas: -
-        </span>
+        <!-- Badges Container: Status Markas & Status Penayangan -->
+        <div class="flex items-center gap-1.5 flex-wrap justify-end">
+          <!-- Status Markas Badge -->
+          <span
+            v-if="!kabupaten.statusMarkasMeta.isEmpty"
+            :class="['inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold border shadow-2xs', kabupaten.statusMarkasMeta.badgeClass]"
+          >
+            <span :class="['w-1.5 h-1.5 rounded-full', kabupaten.statusMarkasMeta.indicatorClass]"></span>
+            <span>Markas: {{ kabupaten.statusMarkasMeta.label }}</span>
+          </span>
+          <span
+            v-else
+            class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-mono text-slate-400 bg-slate-50 border border-slate-200/60"
+          >
+            Markas: -
+          </span>
+
+          <!-- Status Penayangan Badge -->
+          <span
+            v-if="!kabupaten.statusPenayanganMeta.isEmpty"
+            :class="['inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold border shadow-2xs', kabupaten.statusPenayanganMeta.badgeClass]"
+            :title="kabupaten.penayanganTerakhirDiupdate ? `Terakhir Diupdate: ${kabupaten.penayanganTerakhirDiupdate}` : ''"
+          >
+            <span :class="['w-1.5 h-1.5 rounded-full', kabupaten.statusPenayanganMeta.indicatorClass]"></span>
+            <span>{{ kabupaten.statusPenayanganMeta.label }}</span>
+          </span>
+        </div>
       </div>
 
       <!-- Kabupaten Name -->
@@ -147,4 +160,3 @@ const { openKabupatenModal } = useDashboardData()
     </div>
   </div>
 </template>
-
