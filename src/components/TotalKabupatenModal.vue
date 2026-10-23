@@ -5,7 +5,6 @@ import {
   X,
   Search,
   Building2,
-  User,
   Sparkles,
   ShieldAlert,
   Tv,
@@ -21,21 +20,21 @@ const {
   globalStats
 } = useDashboardData()
 
-const activeTab = ref('all') // 'all' | 'has-bm' | 'wajib' | 'tayang'
+const activeTab = ref('all') // 'all' | 'wajib' | 'tidak-wajib' | 'tayang'
 const searchModal = ref('')
 
 const countTotal = computed(() => allKabupatenList.value.length)
-const countHasBm = computed(() => allKabupatenList.value.filter(k => k.hasBm).length)
 const countWajib = computed(() => allKabupatenList.value.filter(k => k.statusMarkasMeta?.isWajib).length)
+const countTidakWajib = computed(() => allKabupatenList.value.filter(k => k.statusMarkasMeta?.isTidakWajib).length)
 const countTayang = computed(() => allKabupatenList.value.filter(k => k.statusPenayanganMeta?.isTayang).length)
 
 const displayedList = computed(() => {
   let list = allKabupatenList.value
 
-  if (activeTab.value === 'has-bm') {
-    list = list.filter(k => k.hasBm)
-  } else if (activeTab.value === 'wajib') {
+  if (activeTab.value === 'wajib') {
     list = list.filter(k => k.statusMarkasMeta?.isWajib)
+  } else if (activeTab.value === 'tidak-wajib') {
+    list = list.filter(k => k.statusMarkasMeta?.isTidakWajib)
   } else if (activeTab.value === 'tayang') {
     list = list.filter(k => k.statusPenayanganMeta?.isTayang)
   }
@@ -47,7 +46,6 @@ const displayedList = computed(() => {
       k.namaBo.toLowerCase().includes(q) ||
       k.kodeBo.toLowerCase().includes(q) ||
       (k.am && k.am.toLowerCase().includes(q)) ||
-      (k.namaBm && k.namaBm.toLowerCase().includes(q)) ||
       (k.provinsi && k.provinsi.toLowerCase().includes(q)) ||
       (k.kabId && String(k.kabId).toLowerCase().includes(q))
     )
@@ -137,20 +135,6 @@ onUnmounted(() => {
 
           <button
             type="button"
-            @click="activeTab = 'has-bm'"
-            :class="[
-              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap',
-              activeTab === 'has-bm'
-                ? 'bg-indigo-600 text-white shadow-2xs font-bold'
-                : 'text-indigo-700 hover:bg-indigo-50'
-            ]"
-          >
-            <span class="w-1.5 h-1.5 rounded-full" :class="activeTab === 'has-bm' ? 'bg-white' : 'bg-indigo-500'"></span>
-            <span>Ada BM ({{ countHasBm }})</span>
-          </button>
-
-          <button
-            type="button"
             @click="activeTab = 'wajib'"
             :class="[
               'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap',
@@ -161,6 +145,20 @@ onUnmounted(() => {
           >
             <span class="w-1.5 h-1.5 rounded-full" :class="activeTab === 'wajib' ? 'bg-white' : 'bg-rose-500'"></span>
             <span>Wajib Markas ({{ countWajib }})</span>
+          </button>
+
+          <button
+            type="button"
+            @click="activeTab = 'tidak-wajib'"
+            :class="[
+              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap',
+              activeTab === 'tidak-wajib'
+                ? 'bg-slate-700 text-white shadow-2xs font-bold'
+                : 'text-slate-700 hover:bg-slate-200/70'
+            ]"
+          >
+            <span class="w-1.5 h-1.5 rounded-full" :class="activeTab === 'tidak-wajib' ? 'bg-white' : 'bg-slate-400'"></span>
+            <span>Tidak Wajib ({{ countTidakWajib }})</span>
           </button>
 
           <button
@@ -184,7 +182,7 @@ onUnmounted(() => {
           <input
             v-model="searchModal"
             type="text"
-            placeholder="Cari kabupaten, BO, BM, AM..."
+            placeholder="Cari kabupaten, BO, AM..."
             class="w-full pl-9 pr-3 py-1.5 text-xs bg-white text-slate-800 placeholder-slate-400 rounded-xl border border-slate-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-hidden transition-all shadow-2xs"
           />
         </div>
@@ -200,7 +198,6 @@ onUnmounted(() => {
                 <th class="py-3 px-4">Kabupaten / Kota</th>
                 <th class="py-3 px-4">Provinsi</th>
                 <th class="py-3 px-4">Branch Office (BO)</th>
-                <th class="py-3 px-4">Branch Manager (BM)</th>
                 <th class="py-3 px-4 text-center">Status Markas</th>
                 <th class="py-3 px-4 text-center">Status Penayangan</th>
                 <th class="py-3 px-4 w-10 text-center"></th>
@@ -248,17 +245,6 @@ onUnmounted(() => {
                     <span class="font-bold text-slate-800 block text-[11px]">{{ item.namaBo }}</span>
                     <span class="text-[10px] text-slate-400 block font-mono">{{ item.kodeBo }} &bull; {{ item.am }}</span>
                   </div>
-                </td>
-
-                <!-- Branch Manager (BM) -->
-                <td class="py-3 px-4 text-slate-700">
-                  <div v-if="item.hasBm" class="flex items-center gap-1.5">
-                    <div class="w-5 h-5 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                      <User class="w-3 h-3" />
-                    </div>
-                    <span class="font-medium text-xs text-slate-800">{{ item.namaBm }}</span>
-                  </div>
-                  <span v-else class="text-slate-400 text-xs">-</span>
                 </td>
 
                 <!-- Status Markas Badge -->
