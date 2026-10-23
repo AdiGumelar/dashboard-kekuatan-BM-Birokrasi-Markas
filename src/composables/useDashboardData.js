@@ -35,6 +35,7 @@ if (typeof window !== 'undefined' && !window.__dashboardPopStateInitialized) {
 }
 const activeKabupaten = ref(null)
 const isStatusPenayanganModalOpen = ref(false)
+const isStatusMarkasModalOpen = ref(false)
 const searchQuery = ref('')
 const statusMarkasFilter = ref('all') // 'all' | 'wajib' | 'tidak-wajib'
 const statusPenayanganFilter = ref('all') // 'all' | 'tayang' | 'proses' | 'belum'
@@ -992,6 +993,35 @@ export function useDashboardData() {
     return list.sort((a, b) => a.kabupaten.localeCompare(b.kabupaten))
   })
 
+  function openStatusMarkasModal() {
+    isStatusMarkasModalOpen.value = true
+  }
+
+  function closeStatusMarkasModal() {
+    isStatusMarkasModalOpen.value = false
+  }
+
+  // Daftar seluruh kabupaten yang memiliki data status markas terdata (bukan kosong / '-')
+  const kabupatenMarkasList = computed(() => {
+    const list = []
+    const sourceBos = filteredBoList.value
+
+    for (const bo of sourceBos) {
+      if (!Array.isArray(bo.kabupatenList)) continue
+      for (const kab of bo.kabupatenList) {
+        if (kab.statusMarkasMeta && !kab.statusMarkasMeta.isEmpty) {
+          list.push({
+            ...kab,
+            kodeBo: bo.kodeBo,
+            namaBo: bo.namaBo,
+            am: bo.am
+          })
+        }
+      }
+    }
+    return list.sort((a, b) => a.kabupaten.localeCompare(b.kabupaten))
+  })
+
   return {
     boList,
     selectedBoKode,
@@ -1024,6 +1054,10 @@ export function useDashboardData() {
     isStatusPenayanganModalOpen,
     kabupatenPenayanganList,
     openStatusPenayanganModal,
-    closeStatusPenayanganModal
+    closeStatusPenayanganModal,
+    isStatusMarkasModalOpen,
+    kabupatenMarkasList,
+    openStatusMarkasModal,
+    closeStatusMarkasModal
   }
 }
