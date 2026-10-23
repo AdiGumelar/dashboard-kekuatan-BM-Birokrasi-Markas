@@ -6,6 +6,7 @@ import Navbar from "./components/Navbar.vue";
 import BoOverview from "./components/BoOverview.vue";
 import BoDetail from "./components/BoDetail.vue";
 import KabupatenDetailModal from "./components/KabupatenDetailModal.vue";
+import TotalBoModal from "./components/TotalBoModal.vue";
 import StatusPenayanganModal from "./components/StatusPenayanganModal.vue";
 import StatusMarkasModal from "./components/StatusMarkasModal.vue";
 import LoginModal from "./components/LoginModal.vue";
@@ -50,6 +51,9 @@ onMounted(() => {
 
     <!-- Modal Detail Kabupaten -->
     <KabupatenDetailModal />
+
+    <!-- Modal Total BO -->
+    <TotalBoModal />
 
     <!-- Modal Status Penayangan -->
     <StatusPenayanganModal />
