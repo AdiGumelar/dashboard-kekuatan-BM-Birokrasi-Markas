@@ -9,6 +9,7 @@ import TotalBoModal from "./components/TotalBoModal.vue";
 import TotalKabupatenModal from "./components/TotalKabupatenModal.vue";
 import StatusPenayanganModal from "./components/StatusPenayanganModal.vue";
 import StatusMarkasModal from "./components/StatusMarkasModal.vue";
+import KekuatanBirokrasiModal from "./components/KekuatanBirokrasiModal.vue";
 import { Building2, Sparkles, Database, FileSpreadsheet } from "@lucide/vue";
 
 const { selectedBo, isLoading, loadData, isUsingMock } = useDashboardData();
@@ -58,6 +59,9 @@ onMounted(() => {
 
     <!-- Modal Status Markas -->
     <StatusMarkasModal />
+
+    <!-- Modal Kekuatan Birokrasi -->
+    <KekuatanBirokrasiModal />
 
     <!-- Footer -->
     <footer class="mt-auto border-t border-slate-200/80 bg-white py-6">

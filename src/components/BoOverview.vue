@@ -33,7 +33,8 @@ const {
   openStatusPenayanganModal,
   openStatusMarkasModal,
   openTotalBoModal,
-  openTotalKabupatenModal
+  openTotalKabupatenModal,
+  openKekuatanBirokrasiModal
 } = useDashboardData();
 </script>
 
@@ -121,6 +122,8 @@ const {
         badge-text="Rata-rata Nasional"
         :badge-class="globalStats.avgBirokrasiMeta.badgeClass"
         icon-bg-class="bg-purple-50 text-purple-600"
+        class="cursor-pointer hover:border-purple-300 hover:ring-2 hover:ring-purple-200/60 transition-all select-none"
+        @click="openKekuatanBirokrasiModal"
       >
         <template #icon>
           <Sparkles class="w-6 h-6" />
