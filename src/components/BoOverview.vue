@@ -31,7 +31,8 @@ const {
   searchQuery,
   selectBo,
   openStatusPenayanganModal,
-  openStatusMarkasModal
+  openStatusMarkasModal,
+  openTotalBoModal
 } = useDashboardData();
 </script>
 
@@ -54,7 +55,16 @@ const {
 
     <!-- Executive KPI Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
-      <StatCard title="Total BO" :value="globalStats.totalBo" subtitle="Kantor Cabang Wilayah" badge-text="Terpetakan" badge-class="bg-indigo-50 text-indigo-700" icon-bg-class="bg-indigo-50 text-indigo-600">
+      <StatCard
+        title="Total BO"
+        :value="globalStats.totalBo"
+        subtitle="Kantor Cabang Wilayah"
+        badge-text="Terpetakan"
+        badge-class="bg-indigo-50 text-indigo-700"
+        icon-bg-class="bg-indigo-50 text-indigo-600"
+        class="cursor-pointer hover:border-indigo-300 hover:ring-2 hover:ring-indigo-200/60 transition-all select-none"
+        @click="openTotalBoModal"
+      >
         <template #icon>
           <Building2 class="w-6 h-6" />
         </template>
