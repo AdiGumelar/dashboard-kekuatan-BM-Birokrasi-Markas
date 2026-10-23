@@ -117,7 +117,7 @@ function handleLogin() {
             ]"
           >
             <ShieldCheck class="w-4 h-4" />
-            <span>Pusat / Admin</span>
+            <span>Pusat</span>
           </button>
         </div>
       </div>
