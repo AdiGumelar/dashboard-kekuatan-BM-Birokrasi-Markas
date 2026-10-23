@@ -168,7 +168,7 @@ function handleLogin() {
               </button>
             </div>
             <p class="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1">
-              <span>🔒 Masukkan PIN 6-digit sesuai yang tertera pada sheet Akun</span>
+              <span>🔒 Masukkan PIN 6-digit yang sesuai</span>
             </p>
           </div>
         </div>
@@ -196,7 +196,7 @@ function handleLogin() {
               </button>
             </div>
             <p class="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1">
-              <span>🔒 Masukkan PIN Administrator sesuai yang tertera pada sheet Akun</span>
+              <span>🔒 Masukkan PIN Administrator yang sesuai</span>
             </p>
           </div>
         </div>
