@@ -33,7 +33,8 @@ const {
   selectBo,
   openStatusPenayanganModal,
   openStatusMarkasModal,
-  openTotalBoModal
+  openTotalBoModal,
+  openTotalKabupatenModal
 } = useDashboardData();
 
 const { isAdmin, isAm, currentAmCode } = useAuth();
@@ -77,7 +78,16 @@ const { isAdmin, isAm, currentAmCode } = useAuth();
         </template>
       </StatCard>
 
-      <StatCard title="Kabupaten & Kota" :value="globalStats.totalKabupaten" subtitle="Cakupan Operasional" :badge-text="`${globalStats.totalBo} BO`" badge-class="bg-sky-50 text-sky-700" icon-bg-class="bg-sky-50 text-sky-600">
+      <StatCard
+        title="Kabupaten & Kota"
+        :value="globalStats.totalKabupaten"
+        subtitle="Cakupan Operasional"
+        :badge-text="`${globalStats.totalBo} BO`"
+        badge-class="bg-sky-50 text-sky-700"
+        icon-bg-class="bg-sky-50 text-sky-600"
+        class="cursor-pointer hover:border-sky-300 hover:ring-2 hover:ring-sky-200/60 transition-all select-none"
+        @click="openTotalKabupatenModal"
+      >
         <template #icon>
           <MapPin class="w-6 h-6" />
         </template>

@@ -7,6 +7,7 @@ import BoOverview from "./components/BoOverview.vue";
 import BoDetail from "./components/BoDetail.vue";
 import KabupatenDetailModal from "./components/KabupatenDetailModal.vue";
 import TotalBoModal from "./components/TotalBoModal.vue";
+import TotalKabupatenModal from "./components/TotalKabupatenModal.vue";
 import StatusPenayanganModal from "./components/StatusPenayanganModal.vue";
 import StatusMarkasModal from "./components/StatusMarkasModal.vue";
 import LoginModal from "./components/LoginModal.vue";
@@ -54,6 +55,9 @@ onMounted(() => {
 
     <!-- Modal Total BO -->
     <TotalBoModal />
+
+    <!-- Modal Kabupaten & Kota -->
+    <TotalKabupatenModal />
 
     <!-- Modal Status Penayangan -->
     <StatusPenayanganModal />
