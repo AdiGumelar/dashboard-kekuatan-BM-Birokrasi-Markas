@@ -31,7 +31,8 @@ const {
   provinsiFilter,
   searchQuery,
   selectBo,
-  openStatusPenayanganModal
+  openStatusPenayanganModal,
+  openStatusMarkasModal
 } = useDashboardData();
 
 const { isAdmin, isAm, currentAmCode } = useAuth();
@@ -77,6 +78,8 @@ const { isAdmin, isAm, currentAmCode } = useAuth();
         :value="globalStats.totalMarkasWajib"
         :subtitle="`${globalStats.totalMarkasTidakWajib} Tidak Wajib`"
         icon-bg-class="bg-rose-50 text-rose-600"
+        class="cursor-pointer hover:border-rose-300 hover:ring-2 hover:ring-rose-200/60 transition-all select-none"
+        @click="openStatusMarkasModal"
       >
         <template #icon>
           <ShieldAlert class="w-6 h-6" />
