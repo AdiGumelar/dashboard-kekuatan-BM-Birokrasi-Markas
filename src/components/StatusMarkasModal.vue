@@ -175,7 +175,6 @@ onUnmounted(() => {
                 <th class="py-3 px-4">Provinsi</th>
                 <th class="py-3 px-4">Branch Office (BO)</th>
                 <th class="py-3 px-4">Status Markas</th>
-                <th class="py-3 px-4">Status Penayangan</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -230,21 +229,6 @@ onUnmounted(() => {
                     <span>{{ item.statusMarkasMeta.label }}</span>
                   </span>
                 </td>
-
-                <!-- Status Penayangan -->
-                <td class="py-3 px-4">
-                  <span
-                    v-if="item.statusPenayanganMeta && !item.statusPenayanganMeta.isEmpty"
-                    :class="[
-                      'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold border text-[11px] shadow-2xs',
-                      item.statusPenayanganMeta.badgeClass
-                    ]"
-                  >
-                    <span :class="['w-1.5 h-1.5 rounded-full', item.statusPenayanganMeta.indicatorClass]"></span>
-                    <span>{{ item.statusPenayanganMeta.label }}</span>
-                  </span>
-                  <span v-else class="text-slate-300 font-mono text-xs">-</span>
-                </td>
               </tr>
             </tbody>
           </table>
@@ -286,3 +270,4 @@ onUnmounted(() => {
   animation: fadeIn 0.15s ease-out forwards;
 }
 </style>
+
