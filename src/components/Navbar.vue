@@ -45,7 +45,7 @@ function handleLogout() {
             <ShieldCheck v-if="isAdmin" class="w-4 h-4 text-indigo-600" />
             <User v-else class="w-4 h-4 text-emerald-600" />
             <div class="leading-tight">
-              <span class="block font-bold">{{ isAdmin ? 'Administrator' : currentAmCode }}</span>
+              <span class="block font-bold">{{ isAdmin ? 'Pusat' : currentAmCode }}</span>
               <span class="text-[10px] font-normal opacity-75 block">{{ isAdmin ? 'Semua Wilayah' : 'Wilayah Terkunci' }}</span>
             </div>
           </div>

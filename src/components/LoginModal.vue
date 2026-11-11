@@ -177,7 +177,7 @@ function handleLogin() {
         <div v-else class="space-y-4">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1.5">
-              PIN / Password Administrator:
+              PIN :
             </label>
             <div class="relative">
               <input
@@ -196,7 +196,7 @@ function handleLogin() {
               </button>
             </div>
             <p class="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1">
-              <span>🔒 Masukkan PIN Administrator yang sesuai</span>
+              <span>🔒 Masukkan PIN yang sesuai</span>
             </p>
           </div>
         </div>
@@ -207,7 +207,7 @@ function handleLogin() {
           :disabled="isSubmitting"
           class="w-full mt-2 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-xs text-white bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] shadow-md shadow-indigo-500/25 transition-all cursor-pointer disabled:opacity-50"
         >
-          <span>{{ activeTab === 'am' ? `Masuk sebagai ${selectedAm || 'AM'}` : 'Masuk sebagai Administrator' }}</span>
+          <span>{{ activeTab === 'am' ? `Masuk sebagai ${selectedAm || 'AM'}` : 'Masuk sebagai Pusat' }}</span>
           <ArrowRight class="w-4 h-4" />
         </button>
       </form>
