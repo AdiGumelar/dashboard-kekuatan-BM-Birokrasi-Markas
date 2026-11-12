@@ -749,7 +749,18 @@ export function useDashboardData() {
     }
   }
 
-  const { currentUser, isAuthenticated, isAdmin, isAm, currentAmCode, sheetAmList, setAmAccountsFromRows } = useAuth()
+  const {
+    currentUser,
+    isAuthenticated,
+    isAdmin,
+    isPt,
+    isAm,
+    currentPtCode,
+    currentPtInfo,
+    currentAmCode,
+    sheetAmList,
+    setAmAccountsFromRows
+  } = useAuth()
 
   // Seluruh daftar unik Area Manager dari dataset dan sheet Akun (untuk dropdown modal login)
   const rawAmList = computed(() => {
@@ -763,16 +774,33 @@ export function useDashboardData() {
     return Array.from(list).sort()
   })
 
-  // Daftar BO yang dapat diakses oleh user aktif (jika role AM, hanya BO milik AM tersebut)
+  // Daftar BO yang dapat diakses oleh user aktif (disesuaikan dengan role: AM, PT, atau Admin)
   const scopedBoList = computed(() => {
-    if (!isAm.value || !currentAmCode.value) {
-      return boList.value
+    // 1. Role AM: hanya BO milik AM tersebut
+    if (isAm.value && currentAmCode.value) {
+      const targetNorm = currentAmCode.value.replace(/\s+/g, '').toUpperCase()
+      return boList.value.filter(bo => {
+        const boNorm = (bo.am || '').replace(/\s+/g, '').toUpperCase()
+        return boNorm === targetNorm
+      })
     }
-    const targetNorm = currentAmCode.value.replace(/\s+/g, '').toUpperCase()
-    return boList.value.filter(bo => {
-      const boNorm = (bo.am || '').replace(/\s+/g, '').toUpperCase()
-      return boNorm === targetNorm
-    })
+
+    // 2. Role PT: hanya BO yang berada di dalam cakupan provinsi milik PT tersebut
+    if (isPt.value && currentPtInfo.value) {
+      const ptProvinces = currentPtInfo.value.provinces || []
+      const allowedProvs = new Set(ptProvinces.map(p => p.toLowerCase()))
+      return boList.value.filter(bo => {
+        const boProv = (bo.provinsi || '').toLowerCase()
+        if (allowedProvs.has(boProv)) return true
+        if (Array.isArray(bo.kabupatenList)) {
+          return bo.kabupatenList.some(k => allowedProvs.has((k.provinsi || '').toLowerCase()))
+        }
+        return false
+      })
+    }
+
+    // 3. Role Admin / Default: seluruh BO nasional
+    return boList.value
   })
 
   const selectedBo = computed(() => {
@@ -785,23 +813,37 @@ export function useDashboardData() {
     if (isAm.value && currentAmCode.value) {
       return [currentAmCode.value]
     }
+    // Jika role PT, hanya tampilkan AM yang memiliki BO di bawah PT tersebut
+    if (isPt.value) {
+      const list = new Set()
+      for (const bo of scopedBoList.value) {
+        if (bo.am && bo.am !== '-') list.add(bo.am)
+      }
+      return Array.from(list).sort()
+    }
     return rawAmList.value
   })
 
-  // Sinkronisasi otomatis amFilter jika login sebagai AM
-  watch([isAm, currentAmCode], ([amStatus, amCode]) => {
-    if (amStatus && amCode) {
-      amFilter.value = amCode
-      // Jika BO yang sedang dibuka tidak berada di wilayah AM aktif, reset ke overview
-      if (selectedBoKode.value) {
-        const exists = scopedBoList.value.some(b => b.kodeBo === selectedBoKode.value)
-        if (!exists) {
-          clearSelectedBo(false)
-        }
-      }
+  // Sinkronisasi otomatis amFilter & reset view saat akun/role berubah
+  watch([isAm, currentAmCode, isPt, currentPtCode], () => {
+    if (isAm.value && currentAmCode.value) {
+      amFilter.value = currentAmCode.value
     } else {
       if (amFilter.value !== 'all') {
         amFilter.value = 'all'
+      }
+    }
+
+    // Sinkronkan filter provinsi jika di luar jangkauan
+    if (provinsiFilter.value !== 'all' && !provinsiList.value.includes(provinsiFilter.value)) {
+      provinsiFilter.value = 'all'
+    }
+
+    // Jika BO yang sedang dibuka tidak berada di wilayah aktif, reset ke overview
+    if (selectedBoKode.value) {
+      const exists = scopedBoList.value.some(b => b.kodeBo === selectedBoKode.value)
+      if (!exists) {
+        clearSelectedBo(false)
       }
     }
   }, { immediate: true })
@@ -1159,6 +1201,9 @@ export function useDashboardData() {
   return {
     rawAmList,
     scopedBoList,
+    isPt,
+    currentPtCode,
+    currentPtInfo,
     boList,
     selectedBoKode,
     selectedBo,

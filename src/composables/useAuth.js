@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import Papa from 'papaparse'
-import { AUTH_CONFIG } from '../config/authConfig.js'
+import { AUTH_CONFIG, PT_LIST } from '../config/authConfig.js'
 import { SHEETS_CONFIG } from '../config/sheetsConfig.js'
 
 const STORAGE_KEY = 'bm_markas_auth_session'
@@ -8,19 +8,30 @@ const STORAGE_KEY = 'bm_markas_auth_session'
 // State disimpan secara reaktif di level modul (singleton)
 const currentUser = ref(null)
 const amAccountsMap = ref(new Map()) // normKey -> { am: string, pin: string }
+const ptAccountsMap = ref(new Map()) // ptCode -> { pt: Object, pin: string }
 const dynamicAdminPin = ref(null)
 const isAccountsLoaded = ref(false)
+let loadAccountsPromise = null
 
-// Isi akun fallback awal dari authConfig
-function seedFallbackAccounts() {
-  if (AUTH_CONFIG.amCustomPins) {
-    for (const [am, pin] of Object.entries(AUTH_CONFIG.amCustomPins)) {
-      const normKey = am.replace(/\s+/g, '').toUpperCase()
-      amAccountsMap.value.set(normKey, { am, pin: String(pin).trim() })
+// Cari objek PT yang cocok dari nama atau kode di sheet
+function findPtByRowName(col0) {
+  if (!col0) return null
+  const norm = String(col0).replace(/[^a-zA-Z0-9]/g, '').toUpperCase()
+  for (const pt of PT_LIST) {
+    const ptNormName = pt.name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()
+    const ptCode = pt.code.toUpperCase()
+    if (
+      norm === ptCode ||
+      norm === ptNormName ||
+      norm.includes(ptCode) ||
+      norm.includes(ptNormName) ||
+      ptNormName.includes(norm)
+    ) {
+      return pt
     }
   }
+  return null
 }
-seedFallbackAccounts()
 
 // Inisialisasi membaca sesi tersimpan di browser
 function loadSession() {
@@ -29,7 +40,7 @@ function loadSession() {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw)
-      if (parsed && (parsed.role === 'admin' || parsed.role === 'am')) {
+      if (parsed && (parsed.role === 'admin' || parsed.role === 'pt' || parsed.role === 'am')) {
         currentUser.value = parsed
       }
     }
@@ -40,13 +51,15 @@ function loadSession() {
 loadSession()
 
 /**
- * Mengisi daftar akun AM langsung dari baris 2D array Sheet "Akun"
+ * Mengisi daftar akun AM, PT, & Admin langsung dari baris 2D array Sheet "Akun"
+ * PIN MURNI dari spreadsheet (tanpa fallback default)
  */
 function setAmAccountsFromRows(rows) {
   if (!Array.isArray(rows) || rows.length === 0) return
 
   let headerFound = false
-  const newMap = new Map()
+  const newAmMap = new Map()
+  const newPtMap = new Map()
 
   for (const row of rows) {
     if (!Array.isArray(row) || row.length === 0) continue
@@ -55,7 +68,9 @@ function setAmAccountsFromRows(rows) {
     const col1 = String(row[1] || '').trim()
 
     if (!headerFound) {
-      if (col0.toLowerCase().includes('am') && col1.toLowerCase().includes('pin')) {
+      const c0 = col0.toLowerCase()
+      const c1 = col1.toLowerCase()
+      if ((c0.includes('user') || c0.includes('am') || c0.includes('akun') || c0.includes('nama')) && c1.includes('pin')) {
         headerFound = true
         continue
       }
@@ -65,22 +80,42 @@ function setAmAccountsFromRows(rows) {
 
     const normKey = col0.replace(/\s+/g, '').toUpperCase()
 
-    // Cek jika terdapat baris kredensial Admin khusus di sheet
+    // Abaikan jika baris merupakan label header
+    if (normKey === 'USER' || normKey === 'USERNAME' || normKey === 'AM' || normKey === 'AKUN') {
+      continue
+    }
+
+    // 1. Cek jika terdapat baris kredensial Admin khusus di sheet
     if (normKey.includes('ADMIN') || normKey.includes('PUSAT')) {
       dynamicAdminPin.value = col1
       continue
     }
 
-    newMap.set(normKey, {
+    // 2. Cek jika baris merupakan entitas PT
+    const matchedPt = findPtByRowName(col0)
+    if (matchedPt) {
+      newPtMap.set(matchedPt.code, {
+        pt: matchedPt,
+        pin: col1
+      })
+      continue
+    }
+
+    // 3. Sisanya adalah akun Area Manager (AM)
+    newAmMap.set(normKey, {
       am: col0,
       pin: col1
     })
   }
 
-  if (newMap.size > 0) {
-    amAccountsMap.value = newMap
-    isAccountsLoaded.value = true
+  if (newAmMap.size > 0) {
+    amAccountsMap.value = newAmMap
   }
+  if (newPtMap.size > 0) {
+    ptAccountsMap.value = newPtMap
+  }
+
+  isAccountsLoaded.value = true
 }
 
 /**
@@ -88,21 +123,29 @@ function setAmAccountsFromRows(rows) {
  */
 async function loadAccountsFromSheet() {
   const url = SHEETS_CONFIG.SPREADSHEET_4_AKUN_CSV_URL?.trim()
-  if (!url) return
+  if (!url) return Promise.resolve()
 
-  try {
-    const cacheBuster = '_t=' + Date.now()
-    const fetchUrl = url.includes('?') ? (url + '&' + cacheBuster) : (url + '?' + cacheBuster)
-    const res = await fetch(fetchUrl, { cache: 'no-cache' })
-    if (!res.ok) return
-    const text = await res.text()
-    const parsed = Papa.parse(text, { skipEmptyLines: true })
-    if (parsed.data && parsed.data.length > 0) {
-      setAmAccountsFromRows(parsed.data)
+  if (loadAccountsPromise) return loadAccountsPromise
+
+  loadAccountsPromise = (async () => {
+    try {
+      const cacheBuster = '_t=' + Date.now()
+      const fetchUrl = url.includes('?') ? (url + '&' + cacheBuster) : (url + '?' + cacheBuster)
+      const res = await fetch(fetchUrl, { cache: 'no-cache' })
+      if (!res.ok) return
+      const text = await res.text()
+      const parsed = Papa.parse(text, { skipEmptyLines: true })
+      if (parsed.data && parsed.data.length > 0) {
+        setAmAccountsFromRows(parsed.data)
+      }
+    } catch (err) {
+      console.warn('Gagal memuat Sheet Akun online:', err)
+    } finally {
+      loadAccountsPromise = null
     }
-  } catch (err) {
-    console.warn('Gagal memuat Sheet Akun online, menggunakan data cadangan:', err)
-  }
+  })()
+
+  return loadAccountsPromise
 }
 
 // Unduh sheet Akun saat di browser
@@ -113,7 +156,10 @@ if (typeof window !== 'undefined') {
 export function useAuth() {
   const isAuthenticated = computed(() => !!currentUser.value)
   const isAdmin = computed(() => currentUser.value?.role === 'admin')
+  const isPt = computed(() => currentUser.value?.role === 'pt')
   const isAm = computed(() => currentUser.value?.role === 'am')
+  const currentPtCode = computed(() => currentUser.value?.ptCode || null)
+  const currentPtInfo = computed(() => PT_LIST.find(p => p.code === currentPtCode.value) || null)
   const currentAmCode = computed(() => currentUser.value?.amCode || null)
 
   // Daftar nama AM yang terdaftar di sheet Akun
@@ -125,16 +171,28 @@ export function useAuth() {
     return list.sort()
   })
 
-  function loginAdmin(inputPin) {
+  async function loginAdmin(inputPin) {
     if (!inputPin || typeof inputPin !== 'string') {
       return { success: false, message: 'Masukkan PIN / Password Administrator' }
     }
 
-    const expectedPin = String(dynamicAdminPin.value || AUTH_CONFIG.admin?.pin || 'admin123').trim()
+    if (!isAccountsLoaded.value) {
+      await loadAccountsFromSheet()
+    }
+
+    if (!dynamicAdminPin.value) {
+      return {
+        success: false,
+        message: 'Akun Administrator belum termuat atau belum terdaftar di spreadsheet Akun'
+      }
+    }
+
+    const expectedPin = String(dynamicAdminPin.value).trim()
     if (inputPin.trim() === expectedPin) {
       const user = {
         role: 'admin',
         amCode: null,
+        ptCode: null,
         name: AUTH_CONFIG.admin?.name || 'Administrator Pusat',
         loginAt: new Date().toISOString()
       }
@@ -146,7 +204,52 @@ export function useAuth() {
     return { success: false, message: 'PIN Administrator salah' }
   }
 
-  function loginAm(amCode, inputPin) {
+  async function loginPt(ptCode, inputPin) {
+    if (!ptCode) {
+      return { success: false, message: 'Silakan pilih Perusahaan (PT)' }
+    }
+    if (!inputPin || typeof inputPin !== 'string') {
+      return { success: false, message: 'Masukkan PIN Perusahaan (PT)' }
+    }
+
+    if (!isAccountsLoaded.value) {
+      await loadAccountsFromSheet()
+    }
+
+    const cleanPt = String(ptCode).trim().toUpperCase()
+    const ptItem = PT_LIST.find(p => p.code.toUpperCase() === cleanPt || p.name.toUpperCase() === cleanPt)
+    if (!ptItem) {
+      return { success: false, message: 'Data Perusahaan tidak ditemukan' }
+    }
+
+    // Cek dari sheet Akun Google Spreadsheet (tanpa default fallback)
+    const ptAccount = ptAccountsMap.value.get(ptItem.code)
+    const expectedPin = ptAccount?.pin ? String(ptAccount.pin).trim() : null
+
+    if (!expectedPin) {
+      return {
+        success: false,
+        message: `Akun ${ptItem.code} belum memiliki PIN di spreadsheet Akun`
+      }
+    }
+
+    if (inputPin.trim() === expectedPin) {
+      const user = {
+        role: 'pt',
+        ptCode: ptItem.code,
+        amCode: null,
+        name: `${ptItem.code} - ${ptItem.name}`,
+        loginAt: new Date().toISOString()
+      }
+      currentUser.value = user
+      saveSession(user)
+      return { success: true }
+    }
+
+    return { success: false, message: `PIN untuk ${ptItem.name || ptItem.code} salah` }
+  }
+
+  async function loginAm(amCode, inputPin) {
     if (!amCode) {
       return { success: false, message: 'Silakan pilih Area Manager (AM)' }
     }
@@ -154,34 +257,29 @@ export function useAuth() {
       return { success: false, message: 'Masukkan PIN Wilayah AM' }
     }
 
+    if (!isAccountsLoaded.value) {
+      await loadAccountsFromSheet()
+    }
+
     const cleanAm = String(amCode).trim()
     const normKey = cleanAm.replace(/\s+/g, '').toUpperCase()
 
-    // 1. Cek dari sheet Akun Google Spreadsheet
-    let expectedPin = null
-    if (amAccountsMap.value.has(normKey)) {
-      expectedPin = String(amAccountsMap.value.get(normKey).pin || '').trim()
-    }
+    // Cek dari sheet Akun Google Spreadsheet (tanpa default fallback)
+    const amAccount = amAccountsMap.value.get(normKey)
+    const expectedPin = amAccount?.pin ? String(amAccount.pin).trim() : null
 
-    // 2. Fallback ke customPins jika belum termuat dari internet
-    if (!expectedPin && AUTH_CONFIG.amCustomPins) {
-      for (const [key, pin] of Object.entries(AUTH_CONFIG.amCustomPins)) {
-        if (key.replace(/\s+/g, '').toUpperCase() === normKey) {
-          expectedPin = String(pin).trim()
-          break
-        }
+    if (!expectedPin) {
+      return {
+        success: false,
+        message: `Akun ${cleanAm} belum memiliki PIN di spreadsheet Akun`
       }
     }
 
-    // 3. Fallback default
-    if (!expectedPin) {
-      expectedPin = String(AUTH_CONFIG.defaultAmPin || '').trim()
-    }
-
-    if (expectedPin && inputPin.trim() === expectedPin) {
+    if (inputPin.trim() === expectedPin) {
       const user = {
         role: 'am',
         amCode: cleanAm,
+        ptCode: null,
         name: `Area Manager (${cleanAm})`,
         loginAt: new Date().toISOString()
       }
@@ -218,14 +316,20 @@ export function useAuth() {
     currentUser,
     isAuthenticated,
     isAdmin,
+    isPt,
     isAm,
+    currentPtCode,
+    currentPtInfo,
     currentAmCode,
     sheetAmList,
     amAccountsMap,
+    ptAccountsMap,
+    PT_LIST,
     isAccountsLoaded,
     loadAccountsFromSheet,
     setAmAccountsFromRows,
     loginAdmin,
+    loginPt,
     loginAm,
     logout
   }

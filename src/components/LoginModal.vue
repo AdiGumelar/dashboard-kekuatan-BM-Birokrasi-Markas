@@ -9,7 +9,8 @@ import {
   EyeOff,
   AlertCircle,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  MapPin
 } from '@lucide/vue'
 import { useAuth } from '../composables/useAuth'
 
@@ -20,9 +21,10 @@ const props = defineProps({
   }
 })
 
-const { loginAdmin, loginAm } = useAuth()
+const { loginAdmin, loginPt, loginAm, PT_LIST } = useAuth()
 
-const activeTab = ref('am') // 'am' | 'admin'
+const activeTab = ref('pt') // 'pt' | 'am' | 'admin'
+const selectedPt = ref(PT_LIST?.[0]?.code || 'PCM')
 const selectedAm = ref('')
 const pinInput = ref('')
 const showPassword = ref(false)
@@ -34,22 +36,28 @@ if (props.amList && props.amList.length > 0) {
   selectedAm.value = props.amList[0]
 }
 
+const currentSelectedPtObj = computed(() => {
+  return PT_LIST?.find(p => p.code === selectedPt.value) || null
+})
+
 function handleTabChange(tab) {
   activeTab.value = tab
   pinInput.value = ''
   errorMessage.value = ''
 }
 
-function handleLogin() {
+async function handleLogin() {
   errorMessage.value = ''
   isSubmitting.value = true
 
   try {
     let result
-    if (activeTab.value === 'am') {
-      result = loginAm(selectedAm.value, pinInput.value)
+    if (activeTab.value === 'pt') {
+      result = await loginPt(selectedPt.value, pinInput.value)
+    } else if (activeTab.value === 'am') {
+      result = await loginAm(selectedAm.value, pinInput.value)
     } else {
-      result = loginAdmin(pinInput.value)
+      result = await loginAdmin(pinInput.value)
     }
 
     if (!result.success) {
@@ -89,35 +97,49 @@ function handleLogin() {
         </div>
       </div>
 
-      <!-- Tab Switcher -->
+      <!-- Tab Switcher (3 Opsi: PT, AM, Pusat) -->
       <div class="px-6 pt-6">
-        <div class="grid grid-cols-2 p-1 bg-slate-100/90 rounded-2xl border border-slate-200/80 text-xs font-bold text-slate-600">
+        <div class="grid grid-cols-3 p-1 bg-slate-100/90 rounded-2xl border border-slate-200/80 text-xs font-bold text-slate-600">
+          <button
+            type="button"
+            @click="handleTabChange('pt')"
+            :class="[
+              'flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl transition-all cursor-pointer text-center',
+              activeTab === 'pt'
+                ? 'bg-white text-amber-700 shadow-xs'
+                : 'hover:text-slate-900 hover:bg-slate-200/50'
+            ]"
+          >
+            <Building2 class="w-3.5 h-3.5 shrink-0" />
+            <span class="truncate">PT</span>
+          </button>
+
           <button
             type="button"
             @click="handleTabChange('am')"
             :class="[
-              'flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl transition-all cursor-pointer',
+              'flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl transition-all cursor-pointer text-center',
               activeTab === 'am'
-                ? 'bg-white text-indigo-700 shadow-xs'
+                ? 'bg-white text-emerald-700 shadow-xs'
                 : 'hover:text-slate-900 hover:bg-slate-200/50'
             ]"
           >
-            <Users class="w-4 h-4" />
-            <span>Area Manager (AM)</span>
+            <Users class="w-3.5 h-3.5 shrink-0" />
+            <span class="truncate">AM</span>
           </button>
 
           <button
             type="button"
             @click="handleTabChange('admin')"
             :class="[
-              'flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl transition-all cursor-pointer',
+              'flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl transition-all cursor-pointer text-center',
               activeTab === 'admin'
                 ? 'bg-white text-indigo-700 shadow-xs'
                 : 'hover:text-slate-900 hover:bg-slate-200/50'
             ]"
           >
-            <ShieldCheck class="w-4 h-4" />
-            <span>Pusat</span>
+            <ShieldCheck class="w-3.5 h-3.5 shrink-0" />
+            <span class="truncate">Pusat</span>
           </button>
         </div>
       </div>
@@ -130,15 +152,57 @@ function handleLogin() {
           <span>{{ errorMessage }}</span>
         </div>
 
-        <!-- Field: Tab Area Manager -->
-        <div v-if="activeTab === 'am'" class="space-y-4">
+        <!-- Field: Tab Perusahaan (PT) -->
+        <div v-if="activeTab === 'pt'" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">
+              Pilih Perusahaan (PT):
+            </label>
+            <select
+              v-model="selectedPt"
+              class="w-full px-3.5 py-2.5 text-xs font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-100 focus:border-amber-400 cursor-pointer transition-all"
+            >
+              <option v-for="pt in PT_LIST" :key="pt.code" :value="pt.code">
+                {{ pt.code }} - {{ pt.name }}
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">
+              PIN Akses PT:
+            </label>
+            <div class="relative">
+              <input
+                v-model="pinInput"
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="Masukkan PIN PT..."
+                class="w-full pl-3.5 pr-10 py-2.5 text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-100 focus:border-amber-400 transition-all font-mono"
+              />
+              <button
+                type="button"
+                @click="showPassword = !showPassword"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <EyeOff v-if="showPassword" class="w-4 h-4" />
+                <Eye v-else class="w-4 h-4" />
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1">
+              <span>🔒 Masukkan PIN 6-digit yang sesuai</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Field: Tab Area Manager (AM) -->
+        <div v-else-if="activeTab === 'am'" class="space-y-4">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1.5">
               Pilih Area Manager:
             </label>
             <select
               v-model="selectedAm"
-              class="w-full px-3.5 py-2.5 text-xs font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 cursor-pointer transition-all"
+              class="w-full px-3.5 py-2.5 text-xs font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-emerald-100 focus:border-emerald-400 cursor-pointer transition-all"
             >
               <option v-if="props.amList.length === 0" value="">Memuat daftar AM...</option>
               <option v-for="am in props.amList" :key="am" :value="am">
@@ -156,7 +220,7 @@ function handleLogin() {
                 v-model="pinInput"
                 :type="showPassword ? 'text' : 'password'"
                 placeholder="Masukkan PIN AM..."
-                class="w-full pl-3.5 pr-10 py-2.5 text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all font-mono"
+                class="w-full pl-3.5 pr-10 py-2.5 text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-emerald-100 focus:border-emerald-400 transition-all font-mono"
               />
               <button
                 type="button"
@@ -173,17 +237,17 @@ function handleLogin() {
           </div>
         </div>
 
-        <!-- Field: Tab Admin -->
+        <!-- Field: Tab Admin (Pusat) -->
         <div v-else class="space-y-4">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1.5">
-              PIN :
+              PIN Pusat:
             </label>
             <div class="relative">
               <input
                 v-model="pinInput"
                 :type="showPassword ? 'text' : 'password'"
-                placeholder="Masukkan PIN Admin..."
+                placeholder="Masukkan PIN Pusat..."
                 class="w-full pl-3.5 pr-10 py-2.5 text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all font-mono"
               />
               <button
@@ -196,7 +260,7 @@ function handleLogin() {
               </button>
             </div>
             <p class="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1">
-              <span>🔒 Masukkan PIN yang sesuai</span>
+              <span>🔒 Masukkan PIN Pusat</span>
             </p>
           </div>
         </div>
@@ -205,9 +269,24 @@ function handleLogin() {
         <button
           type="submit"
           :disabled="isSubmitting"
-          class="w-full mt-2 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-xs text-white bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] shadow-md shadow-indigo-500/25 transition-all cursor-pointer disabled:opacity-50"
+          :class="[
+            'w-full mt-2 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-xs text-white shadow-md active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50',
+            activeTab === 'pt'
+              ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/25'
+              : activeTab === 'am'
+              ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/25'
+              : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/25'
+          ]"
         >
-          <span>{{ activeTab === 'am' ? `Masuk sebagai ${selectedAm || 'AM'}` : 'Masuk sebagai Pusat' }}</span>
+          <span>
+            {{
+              activeTab === 'pt'
+                ? `Masuk sebagai ${selectedPt || 'PT'}`
+                : activeTab === 'am'
+                ? `Masuk sebagai ${selectedAm || 'AM'}`
+                : 'Masuk sebagai Pusat'
+            }}
+          </span>
           <ArrowRight class="w-4 h-4" />
         </button>
       </form>
@@ -225,4 +304,3 @@ function handleLogin() {
   animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 </style>
-
