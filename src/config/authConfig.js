@@ -43,7 +43,7 @@ export const PT_LIST = [
     regionLabel: 'Sumatera NON SPB'
   },
   {
-    code: 'LWM',
+    code: 'LWN',
     name: 'PT. Lontara Widya Nusantara',
     pic: 'Pak Bambang Suryanto',
     regionLabel: 'Sulawesi All, Kaltim-Kaltara'
