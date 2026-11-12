@@ -11,6 +11,7 @@ import {
   ChevronRight
 } from '@lucide/vue'
 import { useDashboardData } from '../composables/useDashboardData'
+import { useAuth } from '../composables/useAuth'
 
 const {
   isTotalKabupatenModalOpen,
@@ -19,6 +20,8 @@ const {
   openKabupatenModal,
   globalStats
 } = useDashboardData()
+
+const { isPt, isAm, currentPtCode, currentPtInfo, currentAmCode } = useAuth()
 
 const activeTab = ref('all') // 'all' | 'wajib' | 'tidak-wajib' | 'tayang'
 const searchModal = ref('')
@@ -99,10 +102,10 @@ onUnmounted(() => {
               <span>Rekapitulasi Wilayah Cakupan</span>
             </div>
             <h3 class="text-lg sm:text-xl font-extrabold tracking-tight text-white leading-tight">
-              Daftar Seluruh Kabupaten & Kota
+              {{ isPt ? `Daftar Kabupaten & Kota - ${currentPtInfo?.name || currentPtCode}` : isAm ? `Daftar Kabupaten & Kota - ${currentAmCode}` : 'Daftar Seluruh Kabupaten & Kota' }}
             </h3>
             <p class="text-xs text-slate-300 mt-0.5">
-              Menampilkan {{ countTotal }} kabupaten/kota yang tersebar di {{ globalStats.totalBo }} Branch Office.
+              Menampilkan {{ countTotal }} kabupaten/kota yang tersebar di {{ globalStats.totalBo }} Branch Office{{ isPt ? ` (${currentPtInfo?.regionLabel || 'PT'})` : '' }}.
             </p>
           </div>
         </div>

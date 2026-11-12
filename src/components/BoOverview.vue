@@ -38,7 +38,7 @@ const {
   openKekuatanBirokrasiModal
 } = useDashboardData();
 
-const { isAdmin, isAm, currentAmCode } = useAuth();
+const { isAdmin, isPt, isAm, currentPtCode, currentPtInfo, currentAmCode } = useAuth();
 </script>
 
 <template>
@@ -49,13 +49,15 @@ const { isAdmin, isAm, currentAmCode } = useAuth();
       <div class="relative z-10 max-w-3xl">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold text-indigo-200 mb-3 border border-white/10">
           <Sparkles class="w-3.5 h-3.5 text-indigo-300" />
-          <span>{{ isAm ? `Sistem Monitoring Wilayah ${currentAmCode}` : 'Sistem Monitoring Kekuatan Wilayah Terintegrasi' }}</span>
+          <span>{{ isPt ? `Sistem Monitoring Wilayah ${currentPtInfo?.code || currentPtCode} (${currentPtInfo?.pic || ''})` : isAm ? `Sistem Monitoring Wilayah ${currentAmCode}` : 'Sistem Monitoring Kekuatan Wilayah Terintegrasi' }}</span>
         </div>
         <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-2">
-          {{ isAm ? `Wilayah Area Manager (${currentAmCode})` : 'Seluruh Branch Office (BO)' }}
+          {{ isPt ? `Wilayah ${currentPtInfo?.name || currentPtCode}` : isAm ? `Wilayah Area Manager (${currentAmCode})` : 'Seluruh Branch Office (BO)' }}
         </h2>
         <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
-          {{ isAm
+          {{ isPt
+            ? `Menampilkan persebaran kekuatan Branch Manager (BM), status kepatuhan markas, status penayangan wilayah, hubungan kedinasan, serta kemitraan organisasi guru di wilayah ${currentPtInfo?.name || 'PT'}.`
+            : isAm
             ? `Menampilkan persebaran kekuatan Branch Manager (BM), status kepatuhan markas, status penayangan wilayah, hubungan kedinasan, serta kemitraan organisasi guru di wilayah ${currentAmCode}.`
             : 'Menampilkan persebaran kekuatan Branch Manager (BM), status kepatuhan markas, status penayangan wilayah, hubungan kedinasan, serta kemitraan organisasi guru (IGTKI, K3S, MKKS) secara terpadu di seluruh Indonesia.' }}
         </p>
@@ -126,7 +128,7 @@ class="cursor-pointer hover:border-emerald-300 hover:ring-2 hover:ring-emerald-2
         title="Kekuatan Birokrasi"
         :value="globalStats.avgBirokrasiScore + ' / 5'"
         :subtitle="globalStats.avgBirokrasiMeta.label"
-        badge-text="Rata-rata Nasional"
+        :badge-text="isPt ? `Rata-rata ${currentPtCode}` : isAm ? `Rata-rata ${currentAmCode}` : 'Rata-rata Nasional'"
         :badge-class="globalStats.avgBirokrasiMeta.badgeClass"
         icon-bg-class="bg-purple-50 text-purple-600"
         class="cursor-pointer hover:border-purple-300 hover:ring-2 hover:ring-purple-200/60 transition-all select-none"
@@ -158,7 +160,7 @@ class="cursor-pointer hover:border-emerald-300 hover:ring-2 hover:ring-emerald-2
           <span>AM: {{ currentAmCode }} (Terkunci)</span>
         </div>
 
-        <!-- Filter Area Manager (Bebas untuk Administrator) -->
+        <!-- Filter Area Manager (Bebas untuk Administrator & PT) -->
         <div v-else class="flex items-center gap-2">
           <Filter class="w-4 h-4 text-slate-400 shrink-0" />
           <span class="text-xs font-semibold text-slate-600">AM:</span>
@@ -189,9 +191,9 @@ class="cursor-pointer hover:border-emerald-300 hover:ring-2 hover:ring-emerald-2
       <div class="flex items-center justify-between lg:justify-end gap-3 text-xs text-slate-500 shrink-0">
         <span>Menampilkan <strong class="text-slate-800">{{ paginatedBoList.length }}</strong> dari <strong class="text-slate-800">{{ filteredBoList.length }}</strong> BO</span>
         <button
-          v-if="(isAdmin && amFilter !== 'all') || provinsiFilter !== 'all' || searchQuery"
+          v-if="(!isAm && amFilter !== 'all') || provinsiFilter !== 'all' || searchQuery"
           @click="
-            if (isAdmin) amFilter = 'all';
+            if (!isAm) amFilter = 'all';
             provinsiFilter = 'all';
             searchQuery = '';
           "

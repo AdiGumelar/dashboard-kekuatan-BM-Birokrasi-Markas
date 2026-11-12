@@ -13,6 +13,7 @@ import {
   Filter
 } from '@lucide/vue'
 import { useDashboardData } from '../composables/useDashboardData'
+import { useAuth } from '../composables/useAuth'
 
 const {
   isTotalBoModalOpen,
@@ -21,6 +22,8 @@ const {
   selectBo,
   amList
 } = useDashboardData()
+
+const { isPt, isAm, currentPtCode, currentPtInfo, currentAmCode } = useAuth()
 
 const selectedAm = ref('all')
 const searchModal = ref('')
@@ -92,10 +95,10 @@ onUnmounted(() => {
               <span>Rekapitulasi Branch Office</span>
             </div>
             <h3 class="text-lg sm:text-xl font-extrabold tracking-tight text-white leading-tight">
-              Daftar Seluruh Branch Office (BO)
+              {{ isPt ? `Daftar Branch Office (BO) - ${currentPtInfo?.name || currentPtCode}` : isAm ? `Daftar Branch Office (BO) - ${currentAmCode}` : 'Daftar Seluruh Branch Office (BO)' }}
             </h3>
             <p class="text-xs text-slate-300 mt-0.5">
-              Menampilkan {{ countTotal }} kantor cabang wilayah terdata beserta cakupan operasionalnya.
+              Menampilkan {{ countTotal }} kantor cabang wilayah terdata{{ isPt ? ` untuk wilayah ${currentPtInfo?.name || currentPtCode}` : isAm ? ` untuk wilayah ${currentAmCode}` : '' }} beserta cakupan operasionalnya.
             </p>
           </div>
         </div>
