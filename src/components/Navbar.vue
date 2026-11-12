@@ -4,7 +4,7 @@ import { useDashboardData } from "../composables/useDashboardData";
 import { useAuth } from "../composables/useAuth";
 
 const { errorMessage, clearSelectedBo } = useDashboardData();
-const { currentUser, isAuthenticated, isAdmin, isAm, currentAmCode, logout } = useAuth();
+const { currentUser, isAuthenticated, isAdmin, isPt, isAm, currentPtCode, currentPtInfo, currentAmCode, logout } = useAuth();
 
 function handleLogout() {
   clearSelectedBo(false);
@@ -36,17 +36,28 @@ function handleLogout() {
         </div>
 
         <!-- User Profile & Logout Section -->
-        <div v-if="isAuthenticated" class="flex items-center space-x-3">
+        <div v-if="isAuthenticated" class="flex items-center space-x-3 shrink-0">
           <!-- Role Badge -->
           <div
             class="flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold"
-            :class="isAdmin ? 'bg-indigo-50 border-indigo-200 text-indigo-800' : 'bg-emerald-50 border-emerald-200 text-emerald-800'"
+            :class="
+              isAdmin
+                ? 'bg-indigo-50 border-indigo-200 text-indigo-800'
+                : isPt
+                ? 'bg-amber-50 border-amber-200 text-amber-800'
+                : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+            "
           >
-            <ShieldCheck v-if="isAdmin" class="w-4 h-4 text-indigo-600" />
-            <User v-else class="w-4 h-4 text-emerald-600" />
+            <ShieldCheck v-if="isAdmin" class="w-4 h-4 text-indigo-600 shrink-0" />
+            <Building2 v-else-if="isPt" class="w-4 h-4 text-amber-600 shrink-0" />
+            <User v-else class="w-4 h-4 text-emerald-600 shrink-0" />
             <div class="leading-tight">
-              <span class="block font-bold">{{ isAdmin ? 'Pusat' : currentAmCode }}</span>
-              <span class="text-[10px] font-normal opacity-75 block">{{ isAdmin ? 'Semua Wilayah' : 'Wilayah Terkunci' }}</span>
+              <span class="block font-bold">
+                {{ isAdmin ? 'Pusat' : isPt ? (currentPtInfo?.name || currentPtCode) : currentAmCode }}
+              </span>
+              <span v-if="!isPt" class="text-[10px] font-normal opacity-75 block">
+                {{ isAdmin ? 'Semua Wilayah' : 'Wilayah Terkunci' }}
+              </span>
             </div>
           </div>
 
@@ -54,7 +65,7 @@ function handleLogout() {
           <button
             @click="handleLogout"
             title="Keluar / Ganti Akun"
-            class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-600 hover:text-rose-600 bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-xl transition-all cursor-pointer shadow-2xs"
+            class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-600 hover:text-rose-600 bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-xl transition-all cursor-pointer shadow-2xs shrink-0"
           >
             <LogOut class="w-3.5 h-3.5" />
             <span class="hidden sm:inline">Keluar</span>
