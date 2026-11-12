@@ -7,8 +7,9 @@
  * - Sheet 2: Markas (gid=491514176)
  * - Sheet 3: Status Penayangan (gid=1912505094)
  * - Sheet 4: Akun & PIN (gid=2084367455)
+ * - Sheet 5: Pembagian BO per PT (gid=6647711)
  * 
- * Mendukung konfigurasi Environment Variables Vercel (VITE_SPREADSHEET_1_URL, VITE_SPREADSHEET_2_URL, VITE_SPREADSHEET_3_URL, VITE_SPREADSHEET_4_URL)
+ * Mendukung konfigurasi Environment Variables Vercel (VITE_SPREADSHEET_1_URL, VITE_SPREADSHEET_2_URL, VITE_SPREADSHEET_3_URL, VITE_SPREADSHEET_4_URL, VITE_SPREADSHEET_5_URL)
  */
 
 export const SHEETS_CONFIG = {
@@ -31,6 +32,11 @@ export const SHEETS_CONFIG = {
   SPREADSHEET_4_AKUN_CSV_URL:
     (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_SPREADSHEET_4_URL || import.meta.env?.VITE_SPREADSHEET_AKUN_URL)) ||
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vSQbpoB0pay7OlljsD-sVA9S8R4p-gGuKdBHnLQr1mhDVQj_pFBuAKePhlad6xVWhDEo9Kg5ox25dS1/pub?output=csv&gid=2084367455',
+
+  // Spreadsheet 5: Pembagian BO per PT (Sheet: PT)
+  SPREADSHEET_5_PT_CSV_URL:
+    (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_SPREADSHEET_5_URL || import.meta.env?.VITE_SPREADSHEET_PT_URL)) ||
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vSQbpoB0pay7OlljsD-sVA9S8R4p-gGuKdBHnLQr1mhDVQj_pFBuAKePhlad6xVWhDEo9Kg5ox25dS1/pub?output=csv&gid=6647711',
 
   // Interval sinkronisasi otomatis (0 untuk nonaktif; data hanya diambil saat web dibuka atau di-refresh)
   AUTO_REFRESH_INTERVAL_MS: 0,

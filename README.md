@@ -13,16 +13,16 @@ Dashboard dilengkapi sistem autentikasi bertingkat berbasis PIN yang aman. **Sel
 - Bebas memilih filter seluruh Area Manager (AM) dan Provinsi.
 
 ### 2. Perusahaan / PT (7 Entitas Wilayah)
-Menampilkan data terfokus sesuai cakupan provinsi masing-masing PT:
-1. **PCM (PT. Pawiyatan Cipta Mandala)**: Jawa Tengah, DI Yogyakarta
-2. **PWM (PT. Padepokan Widya Mandala)**: Jawa Timur
-3. **SPB (PT. Sanggar Paseban Budi)**: Jawa Barat, Banten, DKI Jakarta, Lampung, Sumatera Selatan, Bengkulu, Kepulauan Bangka Belitung
-4. **PBR (PT. Pustaka Betang Raya)**: Kalimantan Barat, Kalimantan Tengah, Kalimantan Selatan (Kalimantan Non Kaltim-Kaltara)
-5. **TCI (PT. Tambo Cendekia Indonesia)**: Aceh, Sumatera Utara, Sumatera Barat, Riau, Kepulauan Riau, Jambi (Sumatera Non SPB)
-6. **LWM (PT. Lontara Widya Nusantara)**: Sulawesi All (Barat, Selatan, Tengah, Tenggara, Utara, Gorontalo), Kalimantan Timur, Kalimantan Utara
-7. **CHR (PT. Cahaya Honai Raya)**: Bali, Nusa Tenggara Barat, Nusa Tenggara Timur, Maluku, Maluku Utara, Seluruh Papua
+Menampilkan data terfokus sesuai pembagian Branch Office (BO) yang ditentukan secara dinamis pada **Sheet "PT" di Google Spreadsheet**:
+1. **PCM (PT. Pawiyatan Cipta Mandala)**: 19 BO (Jateng & DIY)
+2. **PWM (PT. Padepokan Widya Mandala)**: 20 BO (Jawa Timur)
+3. **SPB (PT. Sanggar Paseban Budi)**: 31 BO (Jabar, Banten, DKI, Lampung, Sumsel, Bengkulu, Babel)
+4. **PBR (PT. Pustaka Betang Raya)**: 19 BO (Kalimantan Non Kaltim-Kaltara)
+5. **TCI (PT. Tambo Cendekia Indonesia)**: 21 BO (Sumatera Non SPB)
+6. **LWM (PT. Lontara Widya Nusantara)**: 17 BO (Sulawesi All, Kaltim-Kaltara)
+7. **CHR (PT. Cahaya Honai Raya)**: 19 BO (Bali, NTB, NTT, Maluku, Malut, Papua)
 
-> *Saat login sebagai PT, banner utama, judul modal, dan filter AM secara otomatis disesuaikan dengan wilayah kerja PT terkait.*
+> *Saat login sebagai PT, banner utama, judul modal, dan filter AM secara otomatis disesuaikan dengan wilayah kerja PT terkait berdasarkan data Sheet PT.*
 
 ### 3. Area Manager (AM 01 – AM 15)
 - Akses terkunci khusus pada BO dan Kabupaten di bawah naungan Area Manager tersebut.
@@ -72,7 +72,7 @@ Modal evaluasi mendalam untuk masing-masing kabupaten/kota, mencakup:
 
 ## 📊 Multi-Sheet Integration Engine
 
-Sistem mengintegrasikan **4 sheet Google Spreadsheet** yang dihubungkan secara otomatis melalui parser `papaparse`:
+Sistem mengintegrasikan **5 sheet Google Spreadsheet** yang dihubungkan secara otomatis melalui parser `papaparse`:
 
 | Sheet | Nama Sheet | GID | Fungsi Utama |
 |---|---|---|---|
@@ -80,6 +80,7 @@ Sistem mengintegrasikan **4 sheet Google Spreadsheet** yang dihubungkan secara o
 | **Sheet 2** | Markas | `491514176` | Status Kepatuhan Markas (Wajib / Tidak Wajib) per Kabupaten |
 | **Sheet 3** | Status Penayangan | `1912505094` | Status Penayangan Wilayah (Tayang / Proses / Belum) per Kabupaten |
 | **Sheet 4** | Akun | `2084367455` | Data autentikasi dinamis (Header: `USER, PIN`) untuk Admin, PT, dan AM |
+| **Sheet 5** | PT | `6647711` | Pemetaan dan pembagian wilayah Branch Office (BO) per Perusahaan (PT) |
 
 ---
 
@@ -99,7 +100,10 @@ export const SHEETS_CONFIG = {
   SPREADSHEET_3_PENAYANGAN_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/.../pub?output=csv&gid=1912505094',
 
   // Spreadsheet 4: Akun & PIN
-  SPREADSHEET_4_AKUN_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/.../pub?output=csv&gid=2084367455'
+  SPREADSHEET_4_AKUN_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/.../pub?output=csv&gid=2084367455',
+
+  // Spreadsheet 5: Pembagian BO per PT (Sheet: PT)
+  SPREADSHEET_5_PT_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/.../pub?output=csv&gid=6647711'
 }
 ```
 

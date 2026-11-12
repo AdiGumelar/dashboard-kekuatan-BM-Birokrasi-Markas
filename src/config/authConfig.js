@@ -3,7 +3,7 @@
  * 
  * Mendukung autentikasi:
  * 1. Administrator: Memiliki akses penuh ke seluruh AM secara nasional
- * 2. Perusahaan (PT): Memiliki akses ke wilayah provinsi di bawah naungan PT terkait
+ * 2. Perusahaan (PT): Memiliki akses ke wilayah Branch Office (BO) sesuai pemetaan Sheet "PT" di spreadsheet
  * 3. Area Manager (AM): Hanya dapat melihat data pada wilayah AM miliknya
  * 
  * Keamanan PIN:
@@ -16,95 +16,43 @@ export const PT_LIST = [
     code: 'PCM',
     name: 'PT. Pawiyatan Cipta Mandala',
     pic: 'Pak Muryanto',
-    regionLabel: 'Jateng-DIY',
-    provinces: [
-      'Jawa Tengah',
-      'Daerah Istimewa Yogyakarta'
-    ]
+    regionLabel: 'Jateng-DIY'
   },
   {
     code: 'PWM',
     name: 'PT. Padepokan Widya Mandala',
     pic: 'Pak Diky Mahesa',
-    regionLabel: 'Jatim',
-    provinces: [
-      'Jawa Timur'
-    ]
+    regionLabel: 'Jatim'
   },
   {
     code: 'SPB',
     name: 'PT. Sanggar Paseban Budi',
     pic: 'Pak Rulian',
-    regionLabel: 'Jabar, Banten, DKI, Lampung, Sumsel, Bengkulu, Babel',
-    provinces: [
-      'Jawa Barat',
-      'Banten',
-      'Daerah Khusus Ibukota Jakarta',
-      'Lampung',
-      'Sumatera Selatan',
-      'Bengkulu',
-      'Kepulauan Bangka Belitung'
-    ]
+    regionLabel: 'Jabar, Banten, DKI, Lampung, Sumsel, Bengkulu, Babel'
   },
   {
     code: 'PBR',
     name: 'PT. Pustaka Betang Raya',
     pic: 'Pak Guntoro',
-    regionLabel: 'Kalimantan NON Kaltim-Kaltara',
-    provinces: [
-      'Kalimantan Barat',
-      'Kalimantan Tengah',
-      'Kalimantan Selatan'
-    ]
+    regionLabel: 'Kalimantan NON Kaltim-Kaltara'
   },
   {
     code: 'TCI',
     name: 'PT. Tambo Cendekia Indonesia',
     pic: 'Pak Marjono',
-    regionLabel: 'Sumatera NON SPB',
-    provinces: [
-      'Aceh',
-      'Sumatera Utara',
-      'Sumatera Barat',
-      'Riau',
-      'Kepulauan Riau',
-      'Jambi'
-    ]
+    regionLabel: 'Sumatera NON SPB'
   },
   {
     code: 'LWM',
     name: 'PT. Lontara Widya Nusantara',
     pic: 'Pak Bambang Suryanto',
-    regionLabel: 'Sulawesi All, Kaltim-Kaltara',
-    provinces: [
-      'Sulawesi Barat',
-      'Sulawesi Selatan',
-      'Sulawesi Tengah',
-      'Sulawesi Tenggara',
-      'Sulawesi Utara',
-      'Gorontalo',
-      'Kalimantan Timur',
-      'Kalimantan Utara'
-    ]
+    regionLabel: 'Sulawesi All, Kaltim-Kaltara'
   },
   {
     code: 'CHR',
     name: 'PT. Cahaya Honai Raya',
     pic: 'Pak Katijo',
-    regionLabel: 'Bali, NTB, NTT, Maluku, Malut, Irian',
-    provinces: [
-      'Bali',
-      'Nusa Tenggara Barat',
-      'Nusa Tenggara Timur',
-      'Maluku',
-      'Maluku Utara',
-      'Papua',
-      'Papua Barat',
-      'Papua Barat Daya',
-      'Papua Pegunungan',
-      'Papua Selatan',
-      'Papua Tengah'
-    ]
+    regionLabel: 'Bali, NTB, NTT, Maluku, Malut, Irian'
   }
 ]
 

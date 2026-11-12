@@ -475,3 +475,11 @@ export const MOCK_SHEET_3_PENAYANGAN = [
   { 'Kode BO': 'BO-SOC', 'Nama BO': 'BO Solo Raya & DIY', 'Kode Kabupaten': '3310', Kabupaten: 'Kabupaten Klaten', 'Status Markas': 'Proses', 'Terakhir Diupdate': '2026-10-20 16:10' },
   { 'Kode BO': 'BO-SOC', 'Nama BO': 'BO Solo Raya & DIY', 'Kode Kabupaten': '3311', Kabupaten: 'Kabupaten Sukoharjo', 'Status Markas': 'Belum Tayang', 'Terakhir Diupdate': '2026-10-19 11:25' }
 ]
+
+export const MOCK_SHEET_5_PT = [
+  { 'Kode BO': 'BO-SBY', 'Nama BO': 'BO Surabaya Raya', PT: 'Padepokan Widya Mandala' },
+  { 'Kode BO': 'BO-MLG', 'Nama BO': 'BO Malang Raya', PT: 'Padepokan Widya Mandala' },
+  { 'Kode BO': 'BO-KDR', 'Nama BO': 'BO Kediri - Madiun', PT: 'Padepokan Widya Mandala' },
+  { 'Kode BO': 'BO-JBR', 'Nama BO': 'BO Tapal Kuda', PT: 'Padepokan Widya Mandala' },
+  { 'Kode BO': 'BO-SOC', 'Nama BO': 'BO Solo Raya & DIY', PT: 'Pawiyatan Cipta Mandala' }
+]

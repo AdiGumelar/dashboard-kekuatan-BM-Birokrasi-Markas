@@ -1,7 +1,13 @@
 import { ref, computed, watch } from 'vue'
 import Papa from 'papaparse'
 import { SHEETS_CONFIG } from '../config/sheetsConfig.js'
-import { MOCK_SHEET_1_BM_BIROKRASI, MOCK_SHEET_2_MARKAS, MOCK_SHEET_3_PENAYANGAN } from '../data/mockData.js'
+import { PT_LIST } from '../config/authConfig.js'
+import {
+  MOCK_SHEET_1_BM_BIROKRASI,
+  MOCK_SHEET_2_MARKAS,
+  MOCK_SHEET_3_PENAYANGAN,
+  MOCK_SHEET_5_PT
+} from '../data/mockData.js'
 import { useAuth } from './useAuth.js'
 import {
   getKedekatanMeta,
@@ -58,9 +64,25 @@ const displayedBoCount = ref(24)
 
 export function useDashboardData() {
   /**
+   * Helper pencocokan nama PT dari sheet ke entitas PT_LIST
+   */
+  function matchPtFromSheet(name) {
+    if (!name) return null
+    const norm = String(name).replace(/[^a-zA-Z0-9]/g, '').toUpperCase()
+    for (const pt of PT_LIST) {
+      const ptNorm = pt.name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()
+      const code = pt.code.toUpperCase()
+      if (norm === code || norm === ptNorm || ptNorm.includes(norm) || norm.includes(ptNorm)) {
+        return pt
+      }
+    }
+    return null
+  }
+
+  /**
    * Parser khusus untuk format array mentah (CSV multi-tier header)
    */
-  function parseSheetDataFromArrays(sheet1RawRows, sheet2RawRows, sheet3RawRows = []) {
+  function parseSheetDataFromArrays(sheet1RawRows, sheet2RawRows, sheet3RawRows = [], sheetPtRawRows = []) {
     // 1. Ekstraksi Sheet 2 (Markas)
     const markasMap = new Map() // key: kodeKab
     const markasProvMap = new Map() // key: `${kodeBo}_${norm}` & `${kodeBo}_PROV`
@@ -163,6 +185,44 @@ export function useDashboardData() {
           }
           penayanganNameMap.set(norm, entry)
         }
+      }
+    }
+
+    // 1c. Ekstraksi Sheet PT (Pembagian BO per PT)
+    // Kolom: Kode BO | Nama BO | PT
+    const ptBoMap = new Map() // key: kodeBo -> { kodeBo, namaBo, ptRaw, ptCode, ptName, ptItem }
+    let sPtHeaderFound = false
+
+    if (Array.isArray(sheetPtRawRows) && sheetPtRawRows.length > 0) {
+      for (const row of sheetPtRawRows) {
+        if (!Array.isArray(row) || row.length === 0) continue
+
+        const col0 = String(row[0] || '').trim()
+        const col1 = String(row[1] || '').trim()
+        const col2 = String(row[2] || '').trim()
+
+        if (!sPtHeaderFound) {
+          if (col0.toLowerCase().includes('kode bo') || col2.toLowerCase().includes('pt')) {
+            sPtHeaderFound = true
+          }
+          continue
+        }
+
+        const kodeBo = col0.toUpperCase()
+        const namaBo = col1
+        const rawPtName = col2
+
+        if (!kodeBo || !rawPtName) continue
+
+        const matchedPt = matchPtFromSheet(rawPtName)
+        ptBoMap.set(kodeBo, {
+          kodeBo,
+          namaBo,
+          ptRaw: rawPtName,
+          ptCode: matchedPt ? matchedPt.code : null,
+          ptName: matchedPt ? matchedPt.name : rawPtName,
+          ptItem: matchedPt || null
+        })
       }
     }
 
@@ -286,6 +346,8 @@ export function useDashboardData() {
         avgScore
       }
 
+      const ptInfo = ptBoMap.get(kodeBo) || null
+
       if (!boMap.has(kodeBo)) {
         boMap.set(kodeBo, {
           kodeBo,
@@ -293,6 +355,9 @@ export function useDashboardData() {
           am,
           namaBm: namaBm || '-',
           provinsi,
+          ptCode: ptInfo?.ptCode || null,
+          ptName: ptInfo?.ptName || null,
+          pt: ptInfo?.ptItem || null,
           kabupatenList: []
         })
       }
@@ -302,6 +367,11 @@ export function useDashboardData() {
       if (boEntry.namaBo === kodeBo && namaBo !== kodeBo) boEntry.namaBo = namaBo
       if ((!boEntry.namaBm || boEntry.namaBm === '-') && namaBm) boEntry.namaBm = namaBm
       if (!boEntry.provinsi && provinsi) boEntry.provinsi = provinsi
+      if (!boEntry.ptCode && ptInfo?.ptCode) {
+        boEntry.ptCode = ptInfo.ptCode
+        boEntry.ptName = ptInfo.ptName
+        boEntry.pt = ptInfo.ptItem
+      }
 
       boEntry.kabupatenList.push(kabupatenItem)
     }
@@ -312,6 +382,7 @@ export function useDashboardData() {
         const kodeBo = (markasItem.kodeBo || 'BO-UNKNOWN').trim().toUpperCase()
         const namaBo = markasItem.namaBo || kodeBo
         const kodeKab = markasItem.kodeKab
+        const ptInfo = ptBoMap.get(kodeBo) || null
 
         if (!boMap.has(kodeBo)) {
           boMap.set(kodeBo, {
@@ -319,6 +390,9 @@ export function useDashboardData() {
             namaBo,
             am: '-',
             provinsi: '',
+            ptCode: ptInfo?.ptCode || null,
+            ptName: ptInfo?.ptName || null,
+            pt: ptInfo?.ptItem || null,
             kabupatenList: []
           })
         }
@@ -374,6 +448,7 @@ export function useDashboardData() {
 
     // 5. Agregasi KPI per BO
     const aggregatedBos = Array.from(boMap.values()).map(bo => {
+      const ptInfo = ptBoMap.get(bo.kodeBo) || null
       const total = bo.kabupatenList.length
       const totalWajib = bo.kabupatenList.filter(k => k.statusMarkasMeta.isWajib).length
       const totalTidakWajib = bo.kabupatenList.filter(k => k.statusMarkasMeta.isTidakWajib).length
@@ -397,6 +472,9 @@ export function useDashboardData() {
 
       return {
         ...bo,
+        ptCode: bo.ptCode || ptInfo?.ptCode || null,
+        ptName: bo.ptName || ptInfo?.ptName || null,
+        pt: bo.pt || ptInfo?.ptItem || null,
         totalKabupaten: total,
         totalWajibMarkas: totalWajib,
         totalTidakWajibMarkas: totalTidakWajib,
@@ -419,15 +497,31 @@ export function useDashboardData() {
   }
 
   /**
-   * Menggabungkan raw data dari Sheet 1, Sheet 2, & Sheet 3 (dukungan format objek)
+   * Menggabungkan raw data dari Sheet 1, Sheet 2, Sheet 3, & Sheet PT (dukungan format objek)
    */
-  function processAndMergeData(sheet1Rows, sheet2Rows, sheet3Rows = []) {
+  function processAndMergeData(sheet1Rows, sheet2Rows, sheet3Rows = [], sheetPtRows = []) {
     if (Array.isArray(sheet1Rows) && Array.isArray(sheet1Rows[0])) {
-      parseSheetDataFromArrays(sheet1Rows, sheet2Rows, sheet3Rows)
+      parseSheetDataFromArrays(sheet1Rows, sheet2Rows, sheet3Rows, sheetPtRows)
       return
     }
 
     // Format objek standar
+    const ptBoMap = new Map()
+    if (Array.isArray(sheetPtRows)) {
+      for (const raw of sheetPtRows) {
+        const kode = String(raw['Kode BO'] || raw.kodeBo || raw.kodebo || '').toUpperCase().trim()
+        const ptName = String(raw.PT || raw.pt || '').trim()
+        if (kode && ptName) {
+          const pt = matchPtFromSheet(ptName)
+          ptBoMap.set(kode, {
+            ptCode: pt ? pt.code : null,
+            ptName: pt ? pt.name : ptName,
+            ptItem: pt || null
+          })
+        }
+      }
+    }
+
     const markasMap = new Map()
     const markasProvMap = new Map()
     const markasNameMap = new Map()
@@ -596,6 +690,8 @@ export function useDashboardData() {
         avgScore
       }
 
+      const ptInfo = ptBoMap.get(kodeBo) || null
+
       if (!boMap.has(kodeBo)) {
         boMap.set(kodeBo, {
           kodeBo,
@@ -603,6 +699,9 @@ export function useDashboardData() {
           am,
           namaBm: namaBm || '-',
           provinsi,
+          ptCode: ptInfo?.ptCode || null,
+          ptName: ptInfo?.ptName || null,
+          pt: ptInfo?.ptItem || null,
           kabupatenList: []
         })
       }
@@ -612,12 +711,18 @@ export function useDashboardData() {
       if (boEntry.namaBo === kodeBo && namaBo !== kodeBo) boEntry.namaBo = namaBo
       if ((!boEntry.namaBm || boEntry.namaBm === '-') && namaBm) boEntry.namaBm = namaBm
       if (!boEntry.provinsi && provinsi) boEntry.provinsi = provinsi
+      if (!boEntry.ptCode && ptInfo?.ptCode) {
+        boEntry.ptCode = ptInfo.ptCode
+        boEntry.ptName = ptInfo.ptName
+        boEntry.pt = ptInfo.ptItem
+      }
 
       boEntry.kabupatenList.push(kabupatenItem)
     }
 
     // Hitung ringkasan & KPI tiap BO
     const aggregatedBos = Array.from(boMap.values()).map(bo => {
+      const ptInfo = ptBoMap.get(bo.kodeBo) || null
       const total = bo.kabupatenList.length
       const totalWajib = bo.kabupatenList.filter(k => k.statusMarkasMeta.isWajib).length
       const totalTidakWajib = bo.kabupatenList.filter(k => k.statusMarkasMeta.isTidakWajib).length
@@ -640,6 +745,9 @@ export function useDashboardData() {
 
       return {
         ...bo,
+        ptCode: bo.ptCode || ptInfo?.ptCode || null,
+        ptName: bo.ptName || ptInfo?.ptName || null,
+        pt: bo.pt || ptInfo?.ptItem || null,
         totalKabupaten: total,
         totalWajibMarkas: totalWajib,
         totalTidakWajibMarkas: totalTidakWajib,
@@ -670,9 +778,10 @@ export function useDashboardData() {
     const url2 = SHEETS_CONFIG.SPREADSHEET_2_MARKAS_CSV_URL?.trim()
     const url3 = SHEETS_CONFIG.SPREADSHEET_3_PENAYANGAN_CSV_URL?.trim()
     const url4 = SHEETS_CONFIG.SPREADSHEET_4_AKUN_CSV_URL?.trim()
+    const url5 = SHEETS_CONFIG.SPREADSHEET_5_PT_CSV_URL?.trim()
 
     if (!url1 || !url2) {
-      processAndMergeData(MOCK_SHEET_1_BM_BIROKRASI, MOCK_SHEET_2_MARKAS, MOCK_SHEET_3_PENAYANGAN)
+      processAndMergeData(MOCK_SHEET_1_BM_BIROKRASI, MOCK_SHEET_2_MARKAS, MOCK_SHEET_3_PENAYANGAN, MOCK_SHEET_5_PT)
       isUsingMock.value = true
       lastSyncTime.value = new Date()
       isLoading.value = false
@@ -686,6 +795,7 @@ export function useDashboardData() {
       const fetchUrl2 = url2.includes('?') ? (url2 + '&' + cacheBuster) : (url2 + '?' + cacheBuster)
       const fetchUrl3 = url3 ? (url3.includes('?') ? (url3 + '&' + cacheBuster) : (url3 + '?' + cacheBuster)) : null
       const fetchUrl4 = url4 ? (url4.includes('?') ? (url4 + '&' + cacheBuster) : (url4 + '?' + cacheBuster)) : null
+      const fetchUrl5 = url5 ? (url5.includes('?') ? (url5 + '&' + cacheBuster) : (url5 + '?' + cacheBuster)) : null
 
       const fetchPromises = [
         fetch(fetchUrl1, { cache: 'no-cache' }),
@@ -699,6 +809,8 @@ export function useDashboardData() {
             return null
           })
         )
+      } else {
+        fetchPromises.push(Promise.resolve(null))
       }
 
       if (fetchUrl4) {
@@ -708,9 +820,22 @@ export function useDashboardData() {
             return null
           })
         )
+      } else {
+        fetchPromises.push(Promise.resolve(null))
       }
 
-      const [res1, res2, res3, res4] = await Promise.all(fetchPromises)
+      if (fetchUrl5) {
+        fetchPromises.push(
+          fetch(fetchUrl5, { cache: 'no-cache' }).catch(err => {
+            console.warn('Gagal memuat Sheet 5 PT:', err)
+            return null
+          })
+        )
+      } else {
+        fetchPromises.push(Promise.resolve(null))
+      }
+
+      const [res1, res2, res3, res4, res5] = await Promise.all(fetchPromises)
 
       if (!res1.ok) throw new Error(`Gagal mengunduh Sheet 1: HTTP ${res1.status}`)
       if (!res2.ok) throw new Error(`Gagal mengunduh Sheet 2: HTTP ${res2.status}`)
@@ -719,12 +844,14 @@ export function useDashboardData() {
       const text2 = await res2.text()
       const text3 = res3 && res3.ok ? await res3.text() : ''
       const text4 = res4 && res4.ok ? await res4.text() : ''
+      const text5 = res5 && res5.ok ? await res5.text() : ''
 
       // Parse sebagai 2D array mentah agar aman untuk multi-tier headers
       const parsed1 = Papa.parse(text1, { skipEmptyLines: true })
       const parsed2 = Papa.parse(text2, { skipEmptyLines: true })
       const parsed3 = text3 ? Papa.parse(text3, { skipEmptyLines: true }) : { data: [] }
       const parsed4 = text4 ? Papa.parse(text4, { skipEmptyLines: true }) : { data: [] }
+      const parsed5 = text5 ? Papa.parse(text5, { skipEmptyLines: true }) : { data: [] }
 
       if (parsed1.data.length === 0 || parsed2.data.length === 0) {
         throw new Error('Data spreadsheet kosong')
@@ -735,13 +862,13 @@ export function useDashboardData() {
         setAmAccountsFromRows(parsed4.data)
       }
 
-      parseSheetDataFromArrays(parsed1.data, parsed2.data, parsed3.data)
+      parseSheetDataFromArrays(parsed1.data, parsed2.data, parsed3.data, parsed5.data)
       isUsingMock.value = false
       lastSyncTime.value = new Date()
     } catch (err) {
       console.error('Error fetching Google Sheets data:', err)
       errorMessage.value = `Gagal sinkronisasi data online (${err.message}). Menampilkan data cadangan.`
-      processAndMergeData(MOCK_SHEET_1_BM_BIROKRASI, MOCK_SHEET_2_MARKAS, MOCK_SHEET_3_PENAYANGAN)
+      processAndMergeData(MOCK_SHEET_1_BM_BIROKRASI, MOCK_SHEET_2_MARKAS, MOCK_SHEET_3_PENAYANGAN, MOCK_SHEET_5_PT)
       isUsingMock.value = true
       lastSyncTime.value = new Date()
     } finally {
@@ -785,16 +912,13 @@ export function useDashboardData() {
       })
     }
 
-    // 2. Role PT: hanya BO yang berada di dalam cakupan provinsi milik PT tersebut
-    if (isPt.value && currentPtInfo.value) {
-      const ptProvinces = currentPtInfo.value.provinces || []
-      const allowedProvs = new Set(ptProvinces.map(p => p.toLowerCase()))
+    // 2. Role PT: hanya BO yang terdaftar di bawah PT tersebut berdasarkan Sheet PT di spreadsheet
+    if (isPt.value && currentPtCode.value) {
+      const targetPtCode = currentPtCode.value.toUpperCase()
+      const targetPtName = (currentPtInfo.value?.name || '').toUpperCase()
       return boList.value.filter(bo => {
-        const boProv = (bo.provinsi || '').toLowerCase()
-        if (allowedProvs.has(boProv)) return true
-        if (Array.isArray(bo.kabupatenList)) {
-          return bo.kabupatenList.some(k => allowedProvs.has((k.provinsi || '').toLowerCase()))
-        }
+        if (bo.ptCode && bo.ptCode.toUpperCase() === targetPtCode) return true
+        if (targetPtName && bo.ptName && bo.ptName.toUpperCase().includes(targetPtName)) return true
         return false
       })
     }
