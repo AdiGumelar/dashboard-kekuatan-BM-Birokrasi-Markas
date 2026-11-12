@@ -19,7 +19,7 @@ Menampilkan data terfokus sesuai pembagian Branch Office (BO) yang ditentukan se
 3. **SPB (PT. Sanggar Paseban Budi)**: 31 BO (Jabar, Banten, DKI, Lampung, Sumsel, Bengkulu, Babel)
 4. **PBR (PT. Pustaka Betang Raya)**: 19 BO (Kalimantan Non Kaltim-Kaltara)
 5. **TCI (PT. Tambo Cendekia Indonesia)**: 21 BO (Sumatera Non SPB)
-6. **LWM (PT. Lontara Widya Nusantara)**: 17 BO (Sulawesi All, Kaltim-Kaltara)
+6. **LWN (PT. Lontara Widya Nusantara)**: 17 BO (Sulawesi All, Kaltim-Kaltara)
 7. **CHR (PT. Cahaya Honai Raya)**: 19 BO (Bali, NTB, NTT, Maluku, Malut, Papua)
 
 > *Saat login sebagai PT, banner utama, judul modal, dan filter AM secara otomatis disesuaikan dengan wilayah kerja PT terkait berdasarkan data Sheet PT.*

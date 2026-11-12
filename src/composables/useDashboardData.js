@@ -72,7 +72,13 @@ export function useDashboardData() {
     for (const pt of PT_LIST) {
       const ptNorm = pt.name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()
       const code = pt.code.toUpperCase()
-      if (norm === code || norm === ptNorm || ptNorm.includes(norm) || norm.includes(ptNorm)) {
+      if (
+        norm === code ||
+        norm === ptNorm ||
+        ptNorm.includes(norm) ||
+        norm.includes(ptNorm) ||
+        (code === 'LWN' && (norm === 'LWM' || norm.includes('LWM')))
+      ) {
         return pt
       }
     }

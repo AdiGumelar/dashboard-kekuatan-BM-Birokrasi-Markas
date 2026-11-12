@@ -25,7 +25,8 @@ function findPtByRowName(col0) {
       norm === ptNormName ||
       norm.includes(ptCode) ||
       norm.includes(ptNormName) ||
-      ptNormName.includes(norm)
+      ptNormName.includes(norm) ||
+      (ptCode === 'LWN' && (norm === 'LWM' || norm.includes('LWM')))
     ) {
       return pt
     }
@@ -159,7 +160,10 @@ export function useAuth() {
   const isPt = computed(() => currentUser.value?.role === 'pt')
   const isAm = computed(() => currentUser.value?.role === 'am')
   const currentPtCode = computed(() => currentUser.value?.ptCode || null)
-  const currentPtInfo = computed(() => PT_LIST.find(p => p.code === currentPtCode.value) || null)
+  const currentPtInfo = computed(() => {
+    const code = currentPtCode.value === 'LWM' ? 'LWN' : currentPtCode.value
+    return PT_LIST.find(p => p.code === code) || null
+  })
   const currentAmCode = computed(() => currentUser.value?.amCode || null)
 
   // Daftar nama AM yang terdaftar di sheet Akun
@@ -216,7 +220,8 @@ export function useAuth() {
       await loadAccountsFromSheet()
     }
 
-    const cleanPt = String(ptCode).trim().toUpperCase()
+    let cleanPt = String(ptCode).trim().toUpperCase()
+    if (cleanPt === 'LWM') cleanPt = 'LWN'
     const ptItem = PT_LIST.find(p => p.code.toUpperCase() === cleanPt || p.name.toUpperCase() === cleanPt)
     if (!ptItem) {
       return { success: false, message: 'Data Perusahaan tidak ditemukan' }
